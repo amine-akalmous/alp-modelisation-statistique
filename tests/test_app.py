@@ -24,6 +24,17 @@ def test_pages(client, url):
     assert "Amine Akalmous" in r.get_data(as_text=True)
 
 
+def test_referencement(client):
+    r = client.get("/robots.txt")
+    assert r.status_code == 200 and "Sitemap: https://alpstat.pythonanywhere.com/sitemap.xml" in r.get_data(as_text=True)
+    xml = client.get("/sitemap.xml").get_data(as_text=True)
+    assert xml.count("<url>") == 3 + len(LAWS) and "/loi/normale" in xml
+    html = client.get("/a-propos").get_data(as_text=True)
+    assert "<title>Amine Akalmous" in html and 'rel="canonical" href="https://alpstat.pythonanywhere.com/a-propos"' in html
+    assert '"name":"Amine Akalmous"' in html and "og:image" in html
+    assert html.count("<title>") == 1
+
+
 def test_page_inconnue(client):
     assert client.get("/loi/inconnue").status_code == 404
     assert client.get("/nimporte-quoi").status_code == 404

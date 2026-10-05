@@ -1,0 +1,24 @@
+<title>{{ meta_title }}</title>
+<meta name="description" content="{{ meta_desc }}">
+<meta name="author" content="Amine Akalmous">
+<link rel="canonical" href="{{ site_url }}{{ request.path }}">
+{% if google_verification %}<meta name="google-site-verification" content="{{ google_verification }}">{% endif %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ALP · Modélisation statistique">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="{{ meta_title }}">
+<meta property="og:description" content="{{ meta_desc }}">
+<meta property="og:url" content="{{ site_url }}{{ request.path }}">
+<meta property="og:image" content="{{ site_url }}/static/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebSite","@id":"{{ site_url }}/#site","name":"ALP · Modélisation statistique","alternateName":"ALP — Atelier de lois de probabilité","url":"{{ site_url }}/","inLanguage":"fr","author":{"@id":"{{ site_url }}/a-propos#amine"}},
+ {"@type":"Person","@id":"{{ site_url }}/a-propos#amine","name":"Amine Akalmous","url":"{{ site_url }}/a-propos","image":"{{ site_url }}/static/img/photo.jpg",
+  "jobTitle":"Apprenti ingénieur R&D","worksFor":{"@type":"Organization","name":"EDF R&D"},
+  "alumniOf":{"@type":"CollegeOrUniversity","name":"École d'ingénieurs du Conservatoire national des arts et métiers (CNAM)"},
+  "sameAs":["https://www.linkedin.com/in/amine-akalmous-06a736241/","https://github.com/amine-akalmous"]}
+]}
+</script>

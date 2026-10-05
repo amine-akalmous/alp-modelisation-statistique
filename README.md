@@ -48,4 +48,6 @@ python -m pytest -q
 - Binomiale : n est fixé (estimation par les moments, arrondie) et seul p est obtenu par gradient.
 - Les données envoyées à l'API ne sont ni enregistrées ni conservées.
 
+## En ligne
 
+https://alpstat.pythonanywhere.com

@@ -1,37 +1,88 @@
 """Pages du site et API de calcul."""
-from flask import Blueprint, abort, jsonify, render_template, request
+from datetime import date
+
+from flask import Blueprint, Response, abort, current_app, jsonify, render_template, request
 
 from .laws import LAWS, MAX_N, LawError, analyse, check_data, check_params, clean, get_law, simulate
 
 bp = Blueprint("site", __name__)
 
+# Une phrase par loi, pour la description de sa page dans les moteurs de recherche
+LAW_DESC = {
+    "bernoulli": "épreuve à deux issues, de paramètre θ",
+    "binomiale": "nombre de succès parmi n épreuves indépendantes",
+    "poisson": "nombre d'événements rares sur un intervalle fixe",
+    "geometrique": "rang du premier succès dans une suite d'épreuves",
+    "uniforme-discrete": "entiers équiprobables entre a et b",
+    "uniforme-continue": "valeurs équiprobables sur l'intervalle [a, b]",
+    "exponentielle": "temps d'attente d'un processus sans mémoire",
+    "normale": "loi en cloche de moyenne μ et de variance σ²",
+    "gamma": "grandeurs positives et asymétriques, forme a et taux b",
+    "weibull": "durées de vie et fiabilité, forme a et échelle b",
+}
+
 
 # ---------------------------------------------------------------- pages
 @bp.get("/")
 def accueil():
-    return render_template("accueil.html", page="accueil")
+    return render_template(
+        "accueil.html", page="accueil",
+        meta_title="ALP — Modélisation statistique · lois de probabilité, simulation et estimation",
+        meta_desc="ALP, atelier de modélisation statistique conçu par Amine Akalmous : dix lois de probabilité, "
+                  "leurs formules, la simulation d'échantillons et l'estimation des paramètres "
+                  "(méthode des moments et montée de gradient) à partir de vos données.")
 
 
 @bp.get("/guide")
 def guide():
-    return render_template("guide.html", page="guide")
+    return render_template(
+        "guide.html", page="guide",
+        meta_title="Guide — ALP · Modélisation statistique",
+        meta_desc="Ce qu'il faut savoir avant de simuler : choisir une loi, lire ses grandeurs, comprendre une "
+                  "simulation, importer ses données et interpréter un ajustement.")
 
 
 @bp.get("/loi/<slug>")
 def loi(slug):
     if slug not in LAWS:
         abort(404)
-    return render_template("loi.html", page="lois", slug=slug, name=LAWS[slug].name)
+    name = LAWS[slug].name
+    return render_template(
+        "loi.html", page="lois", slug=slug, name=name,
+        meta_title=f"Loi {name} — formules, simulation et estimation · ALP",
+        meta_desc=f"Loi {name} ({LAW_DESC[slug]}) : définition, espérance et variance, simulation d'échantillons "
+                  "et estimation des paramètres par formule explicite et par montée de gradient.")
 
 
 @bp.get("/a-propos")
 def a_propos():
-    return render_template("a-propos.html", page="a-propos")
+    return render_template(
+        "a-propos.html", page="a-propos",
+        meta_title="Amine Akalmous — apprenti ingénieur R&D · ALP",
+        meta_desc="Amine Akalmous, apprenti ingénieur recherche et développement chez EDF R&D et élève ingénieur "
+                  "en systèmes électroniques, télécommunications et informatique à l'École d'ingénieurs du CNAM.")
 
 
 @bp.app_errorhandler(404)
 def not_found(_):
-    return render_template("404.html", page=""), 404
+    return render_template("404.html", page="", meta_title="Page introuvable — ALP · Modélisation statistique",
+                           meta_desc="Cette page n'existe pas."), 404
+
+
+# ---------------------------------------------------------------- moteurs de recherche
+@bp.get("/robots.txt")
+def robots():
+    site = current_app.config["SITE_URL"]
+    return Response(f"User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: {site}/sitemap.xml\n", mimetype="text/plain")
+
+
+@bp.get("/sitemap.xml")
+def sitemap():
+    site, today = current_app.config["SITE_URL"], date.today().isoformat()
+    pages = [("/", "1.0"), ("/guide", "0.8"), ("/a-propos", "0.7")] + [(f"/loi/{s}", "0.8") for s in LAWS]
+    urls = "".join(f"<url><loc>{site}{p}</loc><lastmod>{today}</lastmod><priority>{pr}</priority></url>" for p, pr in pages)
+    xml = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+    return Response(xml, mimetype="application/xml")
 
 
 # ---------------------------------------------------------------- API
