@@ -12,7 +12,7 @@ def create_app() -> Flask:
     # Adresse publique du site (liens canoniques, sitemap, aperçus de partage)
     app.config["SITE_URL"] = os.environ.get("SITE_URL", "https://alpstat.pythonanywhere.com").rstrip("/")
     # Code de vérification Google Search Console (balise meta), laissé vide tant qu'il n'est pas fourni
-    app.config["GOOGLE_VERIFICATION"] = os.environ.get("GOOGLE_VERIFICATION", "")
+    app.config["GOOGLE_VERIFICATION"] = os.environ.get("GOOGLE_VERIFICATION", "DyReL2xpfW_XEE-vN0EXltRD3qaD5UMNJiKr2LyJq4U")
 
     @app.context_processor
     def site_context():
