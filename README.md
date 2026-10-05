@@ -48,6 +48,4 @@ python -m pytest -q
 - Binomiale : n est fixé (estimation par les moments, arrondie) et seul p est obtenu par gradient.
 - Les données envoyées à l'API ne sont ni enregistrées ni conservées.
 
-## Ce qui ne doit pas être publié
 
-Le dossier `_documents/` (CV, documents de mission contenant des données personnelles de tiers, images d'origine) et la maquette `maquette/` sont exclus par `.gitignore`.
