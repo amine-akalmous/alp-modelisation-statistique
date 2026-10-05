@@ -1,0 +1,12 @@
+# Déploiement sur Render (offre gratuite) : Render lit ce fichier automatiquement.
+services:
+  - type: web
+    name: alp-modelisation-statistique
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 60
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.2

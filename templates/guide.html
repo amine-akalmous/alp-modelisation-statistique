@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide — ALP · Modélisation statistique</title>
+<meta name="description" content="Ce qu'il faut savoir avant de simuler : choisir une loi, lire ses grandeurs, comprendre une simulation, importer ses données et interpréter un ajustement.">
+<link rel="icon" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/site.js"></script>
+</head>
+<body>
+
+{% include "_header.html" %}
+
+<main>
+  <div class="stage">
+    <div class="aurora"><span></span><span></span><span></span></div>
+    <div class="gridbg"></div>
+    <div class="wrap">
+      <div class="ghero">
+        <span class="tag reveal"><i></i>Le guide · 6 étapes · 10 minutes</span>
+        <h1 class="reveal d1">Avant de simuler,<br><span class="grad">comprendre.</span></h1>
+        <p class="lead reveal d2">Une loi de probabilité est un modèle. Elle n'est utile que si l'on sait ce que représente la variable, ce que l'on attend du modèle et quelles hypothèses on accepte en l'utilisant.</p>
+      </div>
+      <div class="gmap reveal d3">
+        <a href="#choisir"><b>01</b>Identifier sa variable</a><a href="#lire"><b>02</b>Lire les grandeurs</a><a href="#simulation"><b>03</b>Comprendre la simulation</a>
+        <a href="#donnees"><b>04</b>Importer ses données</a><a href="#interpreter"><b>05</b>Interpréter avec soin</a><a href="#conventions"><b>06</b>Conventions &amp; sources</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap guide">
+    <nav class="stepper" id="stepper" aria-label="Progression dans le guide">
+      <i class="fill" id="fill"></i>
+      <a href="#choisir"><b>01</b>Identifier</a>
+      <a href="#lire"><b>02</b>Lire</a>
+      <a href="#simulation"><b>03</b>Simuler</a>
+      <a href="#donnees"><b>04</b>Importer</a>
+      <a href="#interpreter"><b>05</b>Interpréter</a>
+      <a href="#conventions"><b>06</b>Conventions</a>
+    </nav>
+
+    <div>
+      <section class="card gsec reveal" id="choisir">
+        <span class="label">01 · Partir du phénomène</span>
+        <h2>Que représente votre variable ?</h2>
+        <p>Votre variable <strong>compte</strong>-t-elle quelque chose (des succès, des événements, des essais) ou <strong>mesure</strong>-t-elle une grandeur qui peut prendre n'importe quelle valeur d'un intervalle (une durée, une tension, une pression) ? Dans le premier cas, la loi est discrète ; dans le second, elle est continue.</p>
+        <table class="qtable"><thead><tr><th>Votre situation</th><th>Une loi à explorer</th></tr></thead><tbody id="choose"></tbody></table>
+        <p class="small">Des pistes, pas une sélection automatique : sur un petit échantillon, plusieurs lois peuvent produire des histogrammes très proches.</p>
+      </section>
+
+      <section class="card gsec reveal" id="lire">
+        <span class="label">02 · Comprendre les grandeurs</span>
+        <h2>Moyenne, dispersion, probabilité</h2>
+        <div class="keys">
+          <div><b>Espérance <span class="tx" data-t="E[X]"></span></b><span>La moyenne obtenue en répétant l'expérience un très grand nombre de fois.</span></div>
+          <div><b>Variance <span class="tx" data-t="\mathrm{Var}(X)"></span></b><span>La dispersion autour de la moyenne, dans l'unité au carré.</span></div>
+          <div><b>Écart-type <span class="tx" data-t="\sigma"></span></b><span>La racine de la variance : même unité que les mesures.</span></div>
+        </div>
+        <p>Pour une loi <strong>discrète</strong>, la hauteur d'une barre est une probabilité <span class="tx" data-t="P(X=k)"></span>. Pour une loi <strong>continue</strong>, la hauteur est une densité : la probabilité d'un intervalle est l'<strong>aire</strong> sous la courbe, et une densité peut dépasser 1. Essayez :</p>
+        <div class="demo">
+          <div class="dh"><b>Aire sous la courbe · loi normale de moyenne 0</b><div class="ctl">a <input id="da" value="-1" inputmode="decimal"> b <input id="db" value="1" inputmode="decimal"> σ² <input id="ds" value="1" inputmode="decimal"></div></div>
+          <canvas id="demoArea"></canvas>
+          <div class="ctl" style="justify-content:space-between;margin-top:6px"><span><span class="tx" data-t="P(a\le X\le b)"></span> = <span class="res" id="dP"></span></span><span>hauteur maximale de la densité = <span class="res" id="dM"></span></span></div>
+        </div>
+        <p>La <strong>fonction de répartition</strong> <span class="tx" data-t="F(x)=P(X\le x)"></span> croît de 0 à 1. Le <strong>quantile</strong> à 95 % est la valeur sous laquelle se trouve au moins 95 % de la probabilité. Sur chaque page de loi, la case « Évaluer en un point » calcule ces valeurs pour vos paramètres.</p>
+      </section>
+
+      <section class="card gsec reveal" id="simulation">
+        <span class="label">03 · Expérimenter</span>
+        <h2>Connaître le modèle, observer un échantillon</h2>
+        <p>L'onglet Simulation tire des valeurs pseudo-aléatoires avec vos paramètres, puis les ré-estime à partir de l'échantillon. L'écart entre « vrai » et « estimé » change à chaque tirage et se resserre quand n augmente, en <span class="tx" data-t="1/\sqrt{n}"></span>. Voyez-le :</p>
+        <div class="demo">
+          <div class="dh"><b>60 estimations de μ, chacune sur un échantillon de taille n</b><div class="ctl"><button class="btn sm ghost" data-n="10">n = 10</button><button class="btn sm ghost" data-n="100">n = 100</button><button class="btn sm ghost" data-n="1000">n = 1000</button></div></div>
+          <canvas id="demoSpread"></canvas>
+          <div class="ctl" style="margin-top:6px">Dispersion des estimations : <span class="res" id="dS"></span><span class="muted" id="dS2"></span></div>
+        </div>
+        <p>Le champ <strong>graine</strong> rend un tirage reproductible : même graine et mêmes paramètres donnent le même échantillon, pratique pour préparer un exemple de cours.</p>
+        <div class="callout"><b>Plus de tirages n'est pas plus de mesures.</b><p>Générer 10 000 valeurs à partir d'une loi ajustée sur 20 observations ne crée aucune information expérimentale. L'incertitude sur les paramètres estimés n'est pas reportée dans la simulation.</p></div>
+      </section>
+
+      <section class="card gsec reveal" id="donnees">
+        <span class="label">04 · Garder le sens du fichier</span>
+        <h2>Une colonne, une variable</h2>
+        <p>Dans l'onglet Application, tapez ou collez vos valeurs, ou ouvrez un fichier <strong>.txt</strong> ou <strong>.csv</strong>. Une liste peut être séparée par des retours à la ligne, des espaces ou des points-virgules ; virgule et point sont acceptés pour les décimales.</p>
+        <p>Pour un <strong>tableau</strong> (colonnes séparées par des points-virgules ou des tabulations), un menu permet de choisir la colonne à analyser ; la ligne de titres est reconnue automatiquement.</p>
+        <div class="code">temps;ecart_Pa
+0;0,12
+1;0,15
+2;0,11</div>
+        <p>Ici, choisissez « ecart_Pa ». Pour un CSV séparé par des virgules, écrivez les décimales avec un point. Les cellules non numériques sont ignorées et leur nombre est signalé : rien n'est supprimé en silence.</p>
+        <p class="small">Vos valeurs sont envoyées au serveur uniquement pour faire le calcul ; elles ne sont ni enregistrées ni conservées.</p>
+      </section>
+
+      <section class="card gsec reveal" id="interpreter">
+        <span class="label">05 · Interpréter</span>
+        <h2>Un ajustement est un point de départ</h2>
+        <div class="keys">
+          <div><b>Dans la famille choisie</b><span>Les paramètres estimés sont les meilleurs pour cette loi ; ils ne prouvent pas que c'est la bonne loi.</span></div>
+          <div><b>Regarder avant de conclure</b><span>Comparez l'histogramme et la courbe, essayez une autre loi, regardez l'asymétrie et le kurtosis.</span></div>
+          <div><b>Indépendance</b><span>Les méthodes supposent des observations indépendantes et de même loi.</span></div>
+        </div>
+        <p>Avant d'ajuster, examinez les conditions d'acquisition : dérive d'un capteur, changement de réglage, valeurs aberrantes, effets systématiques. La méthode des moments est sensible aux valeurs extrêmes, surtout sur de petits échantillons. Enfin, ajuster une loi n'est pas une évaluation d'incertitude de mesure au sens métrologique.</p>
+      </section>
+
+      <section class="card gsec reveal" id="conventions">
+        <span class="label">06 · Transparence</span>
+        <h2>Des conventions explicites</h2>
+        <p>Les propriétés et les courbes sont calculées dans le navigateur ; la simulation, les statistiques descriptives et l'estimation sont calculées sur le serveur en Python, avec NumPy et SciPy. La variance <span class="tx" data-t="\mu_2"></span> utilise le diviseur <strong>n</strong>.</p>
+        <p>Deux estimateurs sont donnés côte à côte. La <strong>formule explicite</strong> est la méthode des moments (pour Weibull, l'équation en a est résolue numériquement). La <strong>montée de gradient</strong> maximise la log-vraisemblance moyenne : on part d'une valeur simple, puis on avance pas à pas dans la direction du gradient, avec une longueur de pas ajustée à chaque itération (règle d'Armijo), jusqu'à ce que le gradient s'annule. Les paramètres positifs sont transformés en logarithme et les probabilités en logit, pour que les contraintes soient toujours respectées. Pour les lois uniformes, la vraisemblance n'est pas dérivable : la montée de gradient ne s'applique pas. Pour la binomiale, n est fixé et seul p est obtenu par gradient.</p>
+        <p>La géométrique commence à 1 ; Gamma utilise la convention forme a et taux b, Weibull la convention forme a et échelle b. Les courbes sont tracées sur une fenêtre centrale et le site ne calcule pas de p-valeur d'adéquation.</p>
+        <ul class="src">
+          <li><a href="https://docs.scipy.org/doc/scipy/reference/stats.html" target="_blank" rel="noopener">SciPy · scipy.stats ↗</a><span>distributions et estimation en Python</span></li>
+          <li><a href="https://www.itl.nist.gov/div898/handbook/" target="_blank" rel="noopener">NIST/SEMATECH · e-Handbook of Statistical Methods ↗</a><span>référence d'ingénierie statistique</span></li>
+          <li><a href="https://www.bipm.org/en/committees/jc/jcgm/publications" target="_blank" rel="noopener">JCGM · guides sur l'incertitude de mesure (GUM) ↗</a><span>métrologie</span></li>
+        </ul>
+        <div class="actions"><a class="btn primary" href="/#lois">Passer aux lois →</a></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+{% include "_footer.html" %}
+
+<script src="/static/lois.js"></script>
+<script>
+$("#choose").innerHTML=chooseRows();
+document.querySelectorAll(".tx").forEach(e=>katex.render(e.dataset.t,e,{throwOnError:false}));
+const NORM=LAWS[7];
+
+/* Progression : étape active + ligne qui se remplit */
+(function(){
+  const links=[...document.querySelectorAll("#stepper a")],secs=links.map(a=>document.querySelector(a.hash));
+  function upd(){
+    const y=innerHeight*.35;let k=0;
+    secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<y)k=i});
+    links.forEach((a,i)=>{a.classList.toggle("on",i===k);a.classList.toggle("done",i<k)});
+    const f=$("#fill"),st=$("#stepper");f.style.height=(links[k].offsetTop+16-16)+"px";
+  }
+  addEventListener("scroll",upd,{passive:true});upd();
+})();
+
+/* Démo 1 : aire sous la courbe */
+(function(){
+  const c=$("#demoArea"),x=c.getContext("2d");
+  function draw(){
+    const r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);
+    const W=r.width,H=r.height,a=num($("#da").value),b=num($("#db").value),v=num($("#ds").value);
+    if(!(Number.isFinite(a)&&Number.isFinite(b)&&v>0&&v<=100)){$("#dP").textContent="—";return}
+    const p=[0,v],s=Math.sqrt(v),x0=-4*s,x1=4*s,ym=NORM.f(0,p)*1.12,sx=t=>14+(t-x0)/(x1-x0)*(W-28),sy=y=>H-22-y/ym*(H-34);
+    x.clearRect(0,0,W,H);
+    const lo=Math.max(Math.min(a,b),x0),hi=Math.min(Math.max(a,b),x1);
+    if(hi>lo){x.beginPath();x.moveTo(sx(lo),sy(0));for(let i=0;i<=120;i++){const t=lo+(hi-lo)*i/120;x.lineTo(sx(t),sy(NORM.f(t,p)))}x.lineTo(sx(hi),sy(0));x.closePath();
+      const g=x.createLinearGradient(sx(lo),0,sx(hi),0);g.addColorStop(0,`rgba(${cssv("--a1-rgb")},.35)`);g.addColorStop(1,`rgba(${cssv("--a2-rgb")},.35)`);x.fillStyle=g;x.fill()}
+    x.strokeStyle="rgba(10,15,30,.45)";x.lineWidth=1;x.beginPath();x.moveTo(14,H-22);x.lineTo(W-14,H-22);x.stroke();
+    x.strokeStyle=cssv("--a1");x.lineWidth=2.6;x.beginPath();for(let i=0;i<=300;i++){const t=x0+(x1-x0)*i/300;i?x.lineTo(sx(t),sy(NORM.f(t,p))):x.moveTo(sx(t),sy(NORM.f(t,p)))}x.stroke();
+    x.fillStyle="#6b7385";x.font="11px 'JetBrains Mono',monospace";x.textAlign="center";[x0,x0/2,0,x1/2,x1].forEach(t=>x.fillText(fmt(t,2),sx(t),H-6));
+    $("#dP").textContent=fmt(NORM.F(Math.max(a,b),p)-NORM.F(Math.min(a,b),p),4);$("#dM").textContent=fmt(NORM.f(0,p),3);
+  }
+  ["#da","#db","#ds"].forEach(s=>$(s).addEventListener("input",draw));
+  addEventListener("resize",draw);addEventListener("themechange",draw);document.fonts.ready.then(draw);draw();
+})();
+
+/* Démo 2 : dispersion des estimations selon n */
+(function(){
+  const c=$("#demoSpread"),x=c.getContext("2d");let pts=[],t0=0,n=10;
+  function run(k){
+    n=k;document.querySelectorAll("[data-n]").forEach(b=>b.classList.toggle("on",+b.dataset.n===n));
+    pts=Array.from({length:60},()=>{let s=0;for(let i=0;i<n;i++)s+=randn();return{m:s/n,j:Math.random()}});
+    const sd=Math.sqrt(pts.reduce((a,p)=>a+p.m*p.m,0)/pts.length);
+    $("#dS").textContent=fmt(sd,3);$("#dS2").textContent=`   (théorie : 1/√n = ${fmt(1/Math.sqrt(n),3)})`;
+    t0=performance.now();requestAnimationFrame(draw);
+  }
+  function draw(now){
+    const r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);
+    const W=r.width,H=r.height,sx=v=>W/2+v/1.2*(W/2-20),base=H-30;
+    x.clearRect(0,0,W,H);
+    x.strokeStyle="rgba(10,15,30,.45)";x.lineWidth=1;x.beginPath();x.moveTo(14,base);x.lineTo(W-14,base);x.stroke();
+    x.setLineDash([4,4]);x.beginPath();x.moveTo(sx(0),12);x.lineTo(sx(0),base);x.stroke();x.setLineDash([]);
+    x.fillStyle="#6b7385";x.font="11px 'JetBrains Mono',monospace";x.textAlign="center";[-1,-.5,0,.5,1].forEach(v=>x.fillText(fmt(v,1),sx(v),H-10));x.fillText("vrai μ = 0",sx(0),10);
+    let busy=false;
+    pts.forEach((p,i)=>{const k=Math.min(1,Math.max(0,((now||t0)-t0-i*12)/380));if(k<1)busy=true;
+      const y=20+(base-30)*(.15+.8*p.j)*k;x.globalAlpha=k;x.fillStyle=i%2?cssv("--a1"):cssv("--a2");x.beginPath();x.arc(sx(Math.max(-1.2,Math.min(1.2,p.m))),y,4.5,0,7);x.fill()});
+    x.globalAlpha=1;if(busy)requestAnimationFrame(draw);
+  }
+  document.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>run(+b.dataset.n)));
+  addEventListener("resize",()=>draw(performance.now()+1e4));addEventListener("themechange",()=>draw(performance.now()+1e4));
+  run(10);
+})();
+</script>
+</body>
+</html>

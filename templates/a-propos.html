@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>À propos — Amine Akalmous · ALP</title>
+<meta name="description" content="Amine Akalmous, apprenti ingénieur R&D chez EDF R&D et élève ingénieur à l'École d'ingénieurs du Cnam.">
+<link rel="icon" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/site.js"></script>
+</head>
+<body>
+
+{% include "_header.html" %}
+
+<main>
+  <!-- Présentation -->
+  <div class="stage">
+    <div class="aurora"><span></span><span></span><span></span></div>
+    <div class="gridbg"></div>
+    <section class="wrap me">
+      <div>
+        <span class="tag reveal"><i></i>À propos de l'auteur</span>
+        <div class="who reveal d1">
+          <div class="avatar"><img src="/static/img/photo.jpg" alt="Amine Akalmous" width="112" height="112"></div>
+          <h1>Amine<br><span class="grad">Akalmous</span></h1>
+        </div>
+        <p class="role reveal d2">Apprenti ingénieur recherche &amp; développement · EDF R&amp;D</p>
+        <p class="sline reveal d2">Élève ingénieur en systèmes électroniques, télécommunications et informatique à l'École d'ingénieurs du Conservatoire national des arts et métiers (CNAM).</p>
+        <div class="actions reveal d4"><a class="btn primary" href="mailto:Amineakalmous@outlook.fr">Me contacter</a><a class="btn ghost" href="https://www.linkedin.com/in/amine-akalmous-06a736241/" target="_blank" rel="noopener">LinkedIn ↗</a></div>
+      </div>
+      <div class="card brief reveal d2">
+        <span class="label">Aujourd'hui</span>
+        <div class="now" style="margin-top:14px"><img src="/static/img/edf.png" alt="EDF"><div><b>EDF R&amp;D · EDF Lab Chatou</b><span>Apprenti ingénieur R&amp;D, depuis septembre 2025</span></div></div>
+        <div class="row3">
+          <div><b data-count="4">4</b><span>expériences en entreprise et en laboratoire</span></div>
+          <div><b data-count="2">2</b><span>écoles, en alternance</span></div>
+          <div><b data-count="2026" data-from="2015">2026</b><span>stage de recherche en Thaïlande</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <div class="card logostrip reveal">
+      <span class="grpl">Expériences</span>
+      <div class="ls"><img src="/static/img/ami.png" alt="AMI Mobile & Informatique"><img src="/static/img/afi-klm.png" alt="Air France Industries KLM Engineering & Maintenance"><img src="/static/img/bu.png" alt="Bangkok University"><img src="/static/img/edf.png" alt="EDF"></div>
+      <span class="sepv"></span>
+      <div class="ls"><span class="grpl">Écoles</span><img src="/static/img/cnam.png" alt="Le Cnam, école d'ingénieurs"><img src="/static/img/dorian.png" alt="Lycée Caroline Dorian" style="height:46px"></div>
+    </div>
+  </div>
+
+  <!-- EDF R&D -->
+  <section class="wrap blk">
+    <div class="bhead"><div><span class="label">Mon poste</span><h2 class="big">Des instruments de mesure<br>pour la ventilation nucléaire</h2></div></div>
+    <div class="card post reveal">
+      <div class="head"><img src="/static/img/edf.png" alt="EDF"><div><b>Apprenti ingénieur R&amp;D</b><span>EDF R&amp;D · EDF Lab Chatou · depuis septembre 2025</span></div></div>
+      <h3>Concevoir, optimiser et évaluer des prototypes de mesure</h3>
+      <p>Mon travail mêle électronique analogique et numérique, acquisition et traitement de signaux (ultrasons, pression différentielle, grandeurs électriques) et maîtrise de la qualité des mesures.</p>
+      <div class="chips"><span>Capteurs à ultrasons</span><span>Pression différentielle</span><span>Traitement du signal</span><span>FPGA &amp; embarqué</span><span>Qualité de mesure</span></div>
+      <div class="phases">
+        <div><b>01</b><h4>Comprendre</h4><span>État de l'art, physique des capteurs, traitement du signal</span></div>
+        <div><b>02</b><h4>Construire</h4><span>Prototypes, essais en laboratoire, études numériques</span></div>
+        <div><b>03</b><h4>Évaluer</h4><span>Évaluation métrologique et essais sur site</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Expériences -->
+  <section class="wrap blk">
+    <div class="bhead"><div><span class="label">Parcours</span><h2 class="big">Expériences</h2></div><p>De la réparation électronique à la recherche appliquée.</p></div>
+    <div class="journey">
+      <span class="track"><i></i></span>
+      <article class="card jcard reveal" data-tilt><div class="lg"><img src="/static/img/ami.png" alt="AMI Mobile & Informatique"></div><span class="when">Mai – juil. 2024 · Stage</span><h3>Technicien de réparation informatique et électronique</h3><span class="org">AMI Mobile &amp; Informatique · Clichy</span><p>Diagnostic et réparation d'ordinateurs et de cartes électroniques, configuration de réseaux, support aux utilisateurs.</p></article>
+      <article class="card jcard reveal d1" data-tilt><div class="lg"><img src="/static/img/afi-klm.png" alt="Air France Industries KLM E&M"></div><span class="when">2023 – 2025 · Alternance</span><h3>Apprenti technicien, électronique avionique</h3><span class="org">Air France Industries KLM E&amp;M · Roissy</span><p>Tests, dépannage et réparation d'équipements avioniques sur bancs de test ; projet de fin d'études sur le Boeing 777.</p></article>
+      <article class="card jcard reveal d2" data-tilt><div class="lg"><img src="/static/img/bu.png" alt="Bangkok University"></div><span class="when">Juin – août 2026 · Stage de recherche</span><h3>Communication par lumière visible sur FPGA</h3><span class="org">Bangkok University · BU-CROCCS · Thaïlande</span><p>Modulation 4-PPM sur FPGA et décodage par la caméra d'un smartphone, puis présentation des travaux.</p></article>
+      <article class="card jcard cur reveal d3" data-tilt><div class="lg"><img src="/static/img/edf.png" alt="EDF"></div><span class="when">Depuis sept. 2025 · Alternance</span><h3>Apprenti ingénieur R&amp;D</h3><span class="org">EDF R&amp;D · EDF Lab Chatou</span><p>Instrumentation de mesure pour la ventilation nucléaire.</p><span class="pill">Aujourd'hui</span></article>
+    </div>
+  </section>
+
+  <!-- Projets -->
+  <section class="wrap blk">
+    <div class="bhead"><div><span class="label">Projets</span><h2 class="big">Deux projets marquants</h2></div><p>Cliquez sur une photo pour l'agrandir.</p></div>
+    <article class="card proj reveal">
+      <div class="gal"><img src="/static/img/bu-talk-1.jpg" alt="Présentation de l'algorithme de décodage à Bangkok University" data-zoom loading="lazy"><img src="/static/img/bu-talk-2.jpg" alt="Présentation de la structure des trames 4-PPM" data-zoom loading="lazy"></div>
+      <div>
+        <span class="when">Été 2026 · Bangkok University, BU-CROCCS</span>
+        <h3>Décoder une LED avec la caméra d'un smartphone</h3>
+        <p>Des signaux à modulation par position d'impulsion (4-PPM) sont générés sur FPGA et émis par une LED. L'obturateur déroulant du capteur CMOS transforme le temps en espace : en mesurant des largeurs en pixels sur l'image, on retrouve les données transmises.</p>
+        <p>J'ai présenté l'algorithme de décodage et la structure des trames à Bangkok University, sous l'encadrement du Dr Poompat Saengudomlert et du Dr Karel Sterckx.</p>
+        <div class="chips"><span>Verilog</span><span>Quartus Prime</span><span>Questa</span><span>4-PPM</span><span>Capteur CMOS</span></div>
+      </div>
+    </article>
+    <article class="card proj flip reveal">
+      <div class="gal g3">
+        <img src="/static/img/afi-1.jpg" alt="Station de recharge BPAS avec son interface de suivi des batteries" data-zoom loading="lazy">
+        <img src="/static/img/afi-2.jpg" alt="Mise au point de la carte électronique à l'oscilloscope" data-zoom loading="lazy">
+        <img src="/static/img/afi-3.jpg" alt="Batteries BPAS en charge sur le banc" data-zoom loading="lazy">
+      </div>
+      <div>
+        <span class="when">2024 · Projet de fin d'études · Air France Industries KLM E&amp;M</span>
+        <h3>Un banc de gestion de charge pour le Boeing 777</h3>
+        <p>Au sein de la Direction Générale Industrielle, j'ai conçu et réalisé une station de recharge pour le BPAS, un équipement électronique avionique qui assiste l'ouverture des portes passagers et le déploiement des toboggans d'évacuation du Boeing 777.</p>
+        <p>Carte électronique, logiciel embarqué et interface de suivi conçus ensemble : charge automatisée sur 24 h, suivi en temps réel de chaque batterie, supervision et alertes, dans le respect des exigences de sécurité aéronautique.</p>
+        <div class="chips"><span>Électronique</span><span>Logiciel embarqué</span><span>Interface de suivi</span><span>Supervision &amp; alertes</span><span>Fiabilité</span></div>
+      </div>
+    </article>
+  </section>
+
+  <!-- Formation -->
+  <section class="wrap blk">
+    <div class="bhead"><div><span class="label">Écoles</span><h2 class="big">Formation</h2></div><p>Deux formations en alternance, toujours au contact de l'industrie.</p></div>
+    <div class="schools">
+      <article class="card school reveal" data-tilt><div class="lg"><img src="/static/img/cnam.png" alt="Le Cnam, école d'ingénieurs"></div><div><span class="when">2025 – 2028</span><h3>Diplôme d'ingénieur · Systèmes électroniques, télécommunications et informatique</h3><p>École d'ingénieurs du Conservatoire national des arts et métiers (CNAM) · par apprentissage avec EDF R&amp;D</p></div></article>
+      <article class="card school reveal d1" data-tilt><div class="lg"><img src="/static/img/dorian.png" alt="Lycée Caroline Dorian"></div><div><span class="when">2023 – 2025</span><h3>BTS CIEL ER · Cybersécurité, informatique et réseaux, électronique</h3><p>Lycée Caroline Dorian, Paris · en alternance avec Air France Industries KLM E&amp;M</p></div></article>
+    </div>
+  </section>
+
+  <!-- Compétences -->
+  <section class="blk">
+    <div class="wrap bhead"><div><span class="label">Compétences</span><h2 class="big">Du capteur à la donnée</h2></div></div>
+    <div class="marquee"><div class="mt" id="mq1"></div></div>
+    <div class="marquee rev"><div class="mt" id="mq2"></div></div>
+  </section>
+
+  <!-- Contact -->
+  <section class="wrap">
+    <div class="cta reveal">
+      <div><h2>Une remarque, une idée, une collaboration ?</h2><p>Intéressé par la recherche scientifique, je suis ouvert aux échanges : retour sur le site, suggestion de loi ou proposition de projet.</p></div>
+      <div class="actions" style="margin:0"><a class="btn primary" href="mailto:Amineakalmous@outlook.fr">Écrire un e-mail</a><a class="btn ghost" href="https://www.linkedin.com/in/amine-akalmous-06a736241/" target="_blank" rel="noopener">LinkedIn ↗</a></div>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+
+<script>
+/* Bandeaux de compétences (dupliqués pour un défilement continu) */
+const S1=["<b>Instrumentation</b> · capteurs","Conditionnement de signal","Pression différentielle","Mesure ultrasonore","Techniques laser","Oscilloscopes","Bancs de test automatisés","<b>Traitement du signal</b>","FFT · corrélation croisée","Modélisation statistique"];
+const S2=["<b>FPGA</b> · VHDL · Verilog","ESP32 · STM32 · Arduino","I2C · SPI · UART · CAN","<b>Python</b> · NumPy · SciPy","C · C++","MATLAB · LabVIEW","KiCad · Altium","Quartus Prime · Questa","Git","SAP · ASTRE"];
+const fill=(id,a)=>{document.getElementById(id).innerHTML=[...a,...a].map(s=>`<span>${s}</span>`).join("")};
+fill("mq1",S1);fill("mq2",S2);
+</script>
+</body>
+</html>

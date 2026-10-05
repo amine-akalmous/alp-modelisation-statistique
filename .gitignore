@@ -1,0 +1,19 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Documents personnels : ne jamais publier (CV, fichier de missions avec des données de tiers, originaux)
+_documents/
+
+# Maquette HTML d'origine (le site en ligne utilise templates/ et static/)
+maquette/
+
+# Archive de déploiement
+dist/
+
+# Divers
+.claude/
+.DS_Store
+Thumbs.db

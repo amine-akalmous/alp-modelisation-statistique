@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALP — Modélisation statistique</title>
+<meta name="description" content="Dix lois de probabilité usuelles : cours et formules, simulation d'échantillons, estimation des paramètres à partir de vos données.">
+<link rel="icon" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/site.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--a1)"/><stop offset="1" style="stop-color:var(--a1)"/></linearGradient></defs></svg>
+
+{% include "_header.html" %}
+
+<main>
+  <div class="stage">
+    <div class="aurora"><span></span><span></span><span></span></div>
+    <div class="gridbg"></div>
+    <section class="wrap hero">
+      <div>
+        <span class="tag reveal"><i></i>Atelier de lois de probabilité</span>
+        <h1 class="reveal d1">Voir la loi.<br>La simuler.<br>La <span class="grad">retrouver.</span></h1>
+        <p class="lead reveal d2">Dix lois usuelles, une même méthode : comprendre le modèle, générer des échantillons, puis estimer les paramètres à partir de vos propres mesures.</p>
+        <div class="actions reveal d3"><a class="btn primary" href="#avant">Commencer</a><a class="btn ghost" href="#lois">Aller aux lois</a></div>
+        <a class="author reveal d4" href="/a-propos"><img src="/static/img/photo.jpg" alt=""><span>Conçu et développé par <b>Amine Akalmous</b><small>Apprenti ingénieur R&amp;D chez EDF R&amp;D · élève ingénieur au CNAM</small></span><i>→</i></a>
+      </div>
+      <div class="card viz reveal d2">
+        <div class="vh"><div><b id="vName">Normale</b><br><span id="vNt"></span></div><div class="dots" id="vDots"></div></div>
+        <canvas id="viz" aria-label="Courbes des dix lois, en transition"></canvas>
+        <div class="vf"><div><small>E[X]</small><strong id="vE">0</strong></div><div><small>Var(X)</small><strong id="vV">1</strong></div><div><small>Type</small><strong id="vT">continue</strong></div></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="wrap blk" id="avant">
+    <div class="bhead"><div><span class="label">Étape 1</span><h2 class="big">Avant de commencer</h2></div><p>Quatre notions à avoir en tête avant de simuler ou d'importer des données. Chacune est détaillée dans le guide.</p></div>
+    <div class="steps">
+      <div class="card glow step reveal"><span class="n">01</span><h3>Identifier sa variable</h3><p>Compte-t-elle des événements, ou mesure-t-elle une grandeur continue ? C'est ce qui oriente vers une loi discrète ou continue.</p><a class="lnk" href="/guide#choisir">Choisir une loi →</a></div>
+      <div class="card glow step reveal d1"><span class="n">02</span><h3>Lire les grandeurs</h3><p>Espérance, variance, densité : ce que chaque valeur affichée veut dire, et ce qu'elle ne dit pas.</p><a class="lnk" href="/guide#lire">Lire les résultats →</a></div>
+      <div class="card glow step reveal d2"><span class="n">03</span><h3>Comprendre la simulation</h3><p>Pourquoi les estimations changent à chaque tirage, et pourquoi elles se resserrent quand n augmente.</p><a class="lnk" href="/guide#simulation">Simuler →</a></div>
+      <div class="card glow step reveal d3"><span class="n">04</span><h3>Importer et interpréter</h3><p>Le bon format de fichier, puis les précautions avant de conclure qu'une loi décrit vos mesures.</p><a class="lnk" href="/guide#donnees">Vos données →</a></div>
+    </div>
+  </section>
+
+  <section class="wrap blk" id="lois">
+    <div class="bhead"><div><span class="label">Étape 2</span><h2 class="big">Choisir une loi</h2></div><p id="chooseText">Sélectionnez votre situation pour voir la loi à explorer, ou ouvrez directement une loi.</p></div>
+    <div class="filters" id="filters"></div>
+    <div class="grp">Lois discrètes</div>
+    <div class="lawgrid" id="gDisc"></div>
+    <div class="grp">Lois continues</div>
+    <div class="lawgrid" id="gCont"></div>
+
+    <div class="card maker reveal">
+      <div class="avatar"><img src="/static/img/photo.jpg" alt="Amine Akalmous" width="112" height="112"></div>
+      <div>
+        <span class="label">Derrière ALP</span>
+        <h3>Un outil conçu par un apprenti ingénieur R&amp;D</h3>
+        <p>ALP est un projet personnel d'<b>Amine Akalmous</b>, apprenti ingénieur R&amp;D chez EDF R&amp;D, où il travaille sur des instruments de mesure pour la ventilation nucléaire.</p>
+        <div class="mlogos"><img src="/static/img/edf.png" alt="EDF"><img src="/static/img/cnam.png" alt="Le Cnam"></div>
+      </div>
+      <a class="btn ghost" href="/a-propos">Découvrir son parcours →</a>
+    </div>
+
+    <div class="cta reveal">
+      <div><h2>Nouveau sur les lois de probabilité ?</h2><p>Le guide reprend les notions essentielles, avec deux démonstrations interactives.</p></div>
+      <div class="actions" style="margin:0"><a class="btn primary" href="/guide">Lire le guide</a><a class="btn ghost" href="/a-propos">L'auteur</a></div>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+
+<script src="/static/lois.js"></script>
+<script>
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Cartes des lois (la courbe se dessine à l'apparition) */
+LAWS.forEach(L=>{
+  const a=document.createElement("a");
+  a.className="card glow lawcard reveal";a.href="/loi/"+L.slug;a.dataset.slug=L.slug;a.dataset.tilt="";
+  a.innerHTML=`<svg viewBox="0 0 100 58" preserveAspectRatio="none"><path class="sp" d="${sparkPath(L,100,58,3)}"/></svg><h3>${L.name}</h3><span class="pr">paramètres : ${L.P.map(q=>q.s).join(", ")}</span><span class="ev">${L.ev}</span>`;
+  (L.disc?$("#gDisc"):$("#gCont")).appendChild(a);
+  const sp=a.querySelector(".sp");sp.style.setProperty("--len",Math.ceil(sp.getTotalLength())+1);
+});
+
+/* Filtre par situation */
+$("#filters").innerHTML=`<button class="on" data-i="-1">Toutes les lois</button>`+CHOOSE.map((c,i)=>`<button data-i="${i}">${c[2]}</button>`).join("");
+$("#filters").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("on",x===b));
+  const i=+b.dataset.i,keep=i<0?null:CHOOSE[i][1];
+  document.querySelectorAll(".lawcard").forEach(c=>{c.classList.toggle("dim",!!keep&&!keep.includes(c.dataset.slug));c.classList.toggle("hit",!!keep&&keep.includes(c.dataset.slug))});
+  $("#chooseText").textContent=i<0?"Sélectionnez votre situation pour voir la loi à explorer, ou ouvrez directement une loi.":CHOOSE[i][0]+" Une piste, pas une sélection automatique.";
+});
+
+/* Courbe animée qui passe d'une loi à l'autre (rapide) */
+(function(){
+  const c=$("#viz"),x=c.getContext("2d"),N=100,shapes=LAWS.map(L=>shape(L,N));
+  const NT=["X ~ B(θ)","X ~ B(n, p)","X ~ P(λ)","X ~ G(p)","X ~ U{a…b}","X ~ U([a, b])","X ~ E(λ)","X ~ N(μ, σ²)","X ~ Γ(a, b)","X ~ W(a, b)"];
+  $("#vDots").innerHTML=LAWS.map(()=>"<i></i>").join("");
+  let W=0,H=0,cur=7,prev=7,t0=0;
+  const HOLD=550,MORPH=420,ease=k=>k<.5?4*k*k*k:1-(-2*k+2)**3/2;
+  function size(){const r=c.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)}
+  function label(){const L=LAWS[cur],p=L.P.map(q=>q.v);$("#vName").textContent=L.name;$("#vNt").textContent=NT[cur];
+    $("#vE").textContent=fmt(L.m(p),3);$("#vV").textContent=fmt(L.v(p),3);$("#vT").textContent=L.disc?"discrète":"continue";
+    [...$("#vDots").children].forEach((e,i)=>e.classList.toggle("on",i===cur))}
+  function draw(now){
+    const el=now-t0,k=reduce?1:Math.min(1,el/MORPH),e=ease(k),a1=cssv("--a1"),a1r=cssv("--a1-rgb");
+    const ys=shapes[cur].map((y,i)=>shapes[prev][i]*(1-e)+y*e);
+    const L=12,R=12,T=16,B=26,sx=i=>L+(W-L-R)*i/(N-1),sy=y=>H-B-y*(H-B-T);
+    x.clearRect(0,0,W,H);
+    x.strokeStyle="rgba(10,15,30,.06)";x.lineWidth=1;
+    for(let i=0;i<=10;i++){const gx=L+(W-L-R)*i/10;x.beginPath();x.moveTo(gx,T);x.lineTo(gx,H-B);x.stroke()}
+    x.strokeStyle="rgba(10,15,30,.5)";x.beginPath();x.moveTo(L,H-B);x.lineTo(W-R,H-B);x.stroke();
+    x.beginPath();x.moveTo(sx(0),sy(0));ys.forEach((y,i)=>x.lineTo(sx(i),sy(y)));x.lineTo(sx(N-1),sy(0));x.closePath();
+    const g=x.createLinearGradient(0,T,0,H-B);g.addColorStop(0,`rgba(${a1r},.26)`);g.addColorStop(1,`rgba(${a1r},.02)`);x.fillStyle=g;x.fill();
+    x.shadowColor=`rgba(${a1r},.4)`;x.shadowBlur=14;x.strokeStyle=a1;x.lineWidth=3;x.lineJoin="round";
+    x.beginPath();ys.forEach((y,i)=>i?x.lineTo(sx(i),sy(y)):x.moveTo(sx(i),sy(y)));x.stroke();x.shadowBlur=0;
+    if(!reduce&&!document.hidden){if(el>MORPH+HOLD){prev=cur;cur=(cur+1)%LAWS.length;t0=now;label()}requestAnimationFrame(draw)}
+  }
+  size();label();
+  addEventListener("resize",()=>{size();draw(performance.now())});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)requestAnimationFrame(n=>{t0=n;draw(n)})});
+  requestAnimationFrame(n=>{t0=n;draw(n)});
+})();
+</script>
+</body>
+</html>
