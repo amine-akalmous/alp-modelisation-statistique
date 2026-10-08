@@ -197,6 +197,10 @@ function parseData(text){
   else if(ok.length&&ok.length<2)msg="Il faut au moins 2 valeurs.";
   else if(L().disc&&ok.some(x=>!isInt(x)))msg="Cette loi est discrète : les valeurs devraient être entières.";
   else if(["exponentielle","gamma","weibull"].includes(L().slug)&&ok.some(x=>x<0))msg="Cette loi n'est définie que pour des valeurs positives.";
+  else if(["gamma","weibull"].includes(L().slug)&&ok.some(x=>x===0)){
+    const z=ok.filter(x=>x===0).length,zz=`${z} valeur${z>1?"s":""} nulle${z>1?"s":""}`;
+    msg=L().slug==="gamma"?`${zz} : la montée de gradient demande des valeurs strictement positives (ln 0 n'existe pas). Seule la formule explicite est calculée.`
+      :`${zz} : la loi de Weibull demande des valeurs strictement positives (ln 0 n'existe pas). Ni la formule explicite ni la montée de gradient ne peuvent être calculées.`}
   st.data=ok.length>=2?ok:null;
   $("#cnt").textContent=ok.length?ok.length.toLocaleString("fr-FR")+" valeurs":"";
   showErr(msg);requestEstimate();
@@ -282,8 +286,10 @@ function niceTicks(a,b,disc){
 }
 function curveOf(l,p,x0,x1){
   if(l.disc){const pts=[];for(let k=Math.ceil(x0);k<=Math.floor(x1);k++)pts.push([k,l.f(k,p)]);return pts}
-  const pts=[];for(let i=0;i<=400;i++){const x=x0+(x1-x0)*i/400;pts.push([x,l.f(x,p)])}return pts;
+  const N=200,pts=[];for(let i=0;i<N;i++){const x=x0+(x1-x0)*i/(N-1);pts.push([x,l.f(x,p)])}return pts;   // 200 points, comme Lib_Plot_densite.py
 }
+/* Lois à support positif : graphe sur [0, F⁻¹(0,999)] des paramètres tracés */
+const POS=["exponentielle","gamma","weibull"];
 function buildModel(){
   const l=L(),m={main:[],hist:[],bw:1,estCurve:null,empty:null};
   let par=st.p,ext=[];
@@ -291,14 +297,23 @@ function buildModel(){
   if(st.tab==="data"){if(!st.data){m.empty="Saisissez ou importez des valeurs pour voir l'histogramme et la loi ajustée."}else{ext=st.data;const e=st.dres&&st.dres.moments;par=fitOk(e)?e:null}}
   m.par=par;
   let[x0,x1]=par?l.rg(par):[mn(ext),mx(ext)];
-  if(st.tab==="data"&&ext.length){x0=Math.min(x0,mn(ext));x1=Math.max(x1,mx(ext));if(!l.disc){const pd=(x1-x0)*.05||1;x0-=pd;x1+=pd}}
+  const pos=POS.includes(l.slug)&&par;
+  if(st.tab==="data"&&ext.length&&!pos){x0=Math.min(x0,mn(ext));x1=Math.max(x1,mx(ext));if(!l.disc){const pd=(x1-x0)*.05||1;x0-=pd;x1+=pd}}
   if(l.disc){x0-=.7;x1+=.7}
   m.x0=x0;m.x1=x1;
   if(par&&!m.empty)m.main=curveOf(l,par,x0,x1);
   if(st.tab==="sim"&&ext.length&&st.res&&fitOk(st.res.moments))m.estCurve=curveOf(l,st.res.moments,x0,x1);
   if(ext.length){
     if(l.disc){const c={};ext.forEach(v=>c[v]=(c[v]||0)+1);m.hist=Object.entries(c).map(([k,n])=>[+k,n/ext.length])}
-    else{const a=mn(ext),b=mx(ext),nb=Math.max(8,Math.min(60,Math.round(Math.sqrt(ext.length)*1.3)));m.bw=(b-a)/nb||1;const c=new Array(nb+1).fill(0);ext.forEach(v=>c[Math.min(nb,Math.floor((v-a)/m.bw))]++);m.hist=c.map((n,i)=>[a+i*m.bw,n/ext.length/m.bw])}
+    else{
+      /* Histogramme en densité (effectif / (n × largeur)) : même échelle que la courbe.
+         Pour les lois à support positif, les classes couvrent [0, F⁻¹(0,999)] et les rares
+         valeurs au-delà sont comptées dans n mais non dessinées. */
+      const a=pos?0:mn(ext),b=pos?x1:mx(ext),nb=Math.max(8,Math.min(60,Math.round(Math.sqrt(ext.length)*1.3)));
+      m.bw=(b-a)/nb||1;const c=new Array(nb).fill(0);let out=0;
+      ext.forEach(v=>{if(v<a||v>b){out++;return}c[Math.min(nb-1,Math.floor((v-a)/m.bw))]++});
+      m.hist=c.map((n,i)=>[a+i*m.bw,n/ext.length/m.bw]);m.beyond=out;
+    }
   }
   const skip=l.disc?0:Math.floor(m.main.length*.02);
   m.ymax=Math.max(...m.main.slice(skip).map(q=>q[1]).filter(Number.isFinite),...m.hist.map(q=>q[1]),1e-9)*1.12;
@@ -309,8 +324,10 @@ function legend(){
   $("#legend").innerHTML=st.tab==="props"?s("var(--a1)",L().disc?"P(X = k)":"f(x)"):
     st.tab==="sim"?(st.sample?s("var(--a1)","Loi théorique")+s("rgba(10,15,30,.35)","Échantillon simulé")+s("dash","Loi estimée"):""):
     (st.data?s("rgba(10,15,30,.35)","Vos données")+s("var(--a1)","Loi ajustée (paramètres estimés)"):"");
+  const m=st.model;
+  if(m&&POS.includes(L().slug)&&!m.empty)$("#legend").innerHTML+=`<span class="muted">Axe : 0 → F⁻¹(0,999) = ${fmt(m.x1,3)}${m.beyond?` · ${m.beyond} valeur${m.beyond>1?"s":""} au-delà, non dessinée${m.beyond>1?"s":""}`:""}</span>`;
 }
-function refresh(){buildModel();legend();draw()}
+function refresh(){buildModel();legend();draw()}   // legend() lit st.model : construit juste avant
 function draw(){
   const l=L(),m=st.model;if(!m||!cv)return;
   const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;

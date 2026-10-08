@@ -27,7 +27,7 @@ LAW_DESC = {
 def accueil():
     return render_template(
         "accueil.html", page="accueil",
-        meta_title="ALP — Modélisation statistique · lois de probabilité, simulation et estimation",
+        meta_title="ALP — Modélisation statistique · par Amine Akalmous",
         meta_desc="ALP, atelier de modélisation statistique conçu par Amine Akalmous : dix lois de probabilité, "
                   "leurs formules, la simulation d'échantillons et l'estimation des paramètres "
                   "(méthode des moments et montée de gradient) à partir de vos données.")

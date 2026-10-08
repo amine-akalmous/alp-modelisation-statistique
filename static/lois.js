@@ -34,6 +34,18 @@ const gammaDraw=(a,b)=>{ // Marsaglia–Tsang, a>0
   for(;;){const x=randn(),t=1+c*x;if(t<=0)continue;const w=t**3;if(Math.log(rand())<.5*x*x+d-d*w+d*Math.log(w))return d*w*b}
 };
 
+/* Quantiles F⁻¹(q) des lois à support positif (mêmes conventions que scipy.stats) :
+   le graphe d'une densité est tracé sur [0, F⁻¹(Q_MAX)], comme dans Lib_Plot_densite.py */
+const Q_MAX=0.999;
+const expPpf=(q,l)=>-Math.log(1-q)/l;                          // expon.ppf(q, scale=1/λ)
+const weibullPpf=(q,a,b)=>b*Math.pow(-Math.log(1-q),1/a);      // weibull_min.ppf(q, a, scale=b)
+function gammaPpf(q,a,b){                                      // gamma.ppf(q, a, scale=1/b), par dichotomie sur F
+  let lo=0,hi=Math.max(1,a)/b;
+  while(gammp(a,b*hi)<q&&hi<1e12)hi*=2;
+  for(let i=0;i<200;i++){const mid=(lo+hi)/2;gammp(a,b*mid)<q?lo=mid:hi=mid}
+  return (lo+hi)/2;
+}
+
 /* Contrôles de validité des valeurs tapées */
 const fin=(p)=>p.every(v=>Number.isFinite(v)&&Math.abs(v)<=1e6);
 const isInt=v=>Math.abs(v-Math.round(v))<1e-9;
@@ -81,11 +93,11 @@ const LAWS=[
   check:([a,b])=>!(a<b)?"Il faut a < b.":null,
   f:(x,[a,b])=>x>=a&&x<=b?1/(b-a):0,F:(x,[a,b])=>x<a?0:x>b?1:(x-a)/(b-a),rg:([a,b])=>[a-(b-a)*.25,b+(b-a)*.25],
   m:([a,b])=>(a+b)/2,v:([a,b])=>(b-a)**2/12,draw:([a,b])=>a+(b-a)*U(),
-  est:s=>{const m=mean(s),d=Math.sqrt(3*varS(s));return[m-d,m+d]}},
+  est:s=>[mn(s),mx(s)]},
  {slug:"exponentielle",name:"Exponentielle",disc:0,ev:"E = 1/λ · Var = 1/λ²",
   P:[{s:"λ",v:1,d:"λ > 0"}],
   check:([l])=>!(l>0)?"λ doit être strictement positif.":null,
-  f:(x,[l])=>x<0?0:l*Math.exp(-l*x),F:(x,[l])=>x<0?0:1-Math.exp(-l*x),rg:([l])=>[0,7/l],
+  f:(x,[l])=>x<0?0:l*Math.exp(-l*x),F:(x,[l])=>x<0?0:1-Math.exp(-l*x),rg:([l])=>[0,expPpf(Q_MAX,l)],
   m:([l])=>1/l,v:([l])=>1/l**2,draw:([l])=>-Math.log(rand())/l,est:s=>[1/mean(s)]},
  {slug:"normale",name:"Normale",disc:0,ev:"E = μ · Var = σ²",
   P:[{s:"μ",v:0,d:"réel"},{s:"σ²",v:1,d:"σ² > 0"}],
@@ -97,16 +109,16 @@ const LAWS=[
   P:[{s:"a",v:2,d:"a > 0 (forme)"},{s:"b",v:.5,d:"b > 0 (taux)"}],
   check:([a,b])=>!(a>0&&b>0)?"a et b doivent être strictement positifs.":null,
   f:(x,[a,b])=>x<=0?0:Math.exp(a*Math.log(b)+(a-1)*Math.log(x)-b*x-lg(a)),
-  F:(x,[a,b])=>gammp(a,b*x),rg:([a,b])=>[0,(a+5*Math.sqrt(a))/b],
+  F:(x,[a,b])=>gammp(a,b*x),rg:([a,b])=>[0,gammaPpf(Q_MAX,a,b)],
   m:([a,b])=>a/b,v:([a,b])=>a/(b*b),draw:([a,b])=>gammaDraw(a,1/b),
   est:s=>{const m=mean(s),v=varS(s);return[m*m/v,m/v]}},
  {slug:"weibull",name:"Weibull",disc:0,ev:"E = bΓ(1+1/a)",
   P:[{s:"a",v:1.5,d:"0,3 ≤ a ≤ 100 (forme)"},{s:"b",v:1,d:"b > 0 (échelle)"}],
   check:([a,b])=>!(a>=.3&&a<=100)?"a doit être compris entre 0,3 et 100.":!(b>0)?"b doit être strictement positif.":null,
   f:(x,[a,b])=>x<0?0:(a/b)*(x/b)**(a-1)*Math.exp(-((x/b)**a)),F:(x,[a,b])=>x<0?0:1-Math.exp(-((x/b)**a)),
-  rg:([a,b])=>[0,b*Math.pow(7,1/a)],
+  rg:([a,b])=>[0,weibullPpf(Q_MAX,a,b)],
   m:([a,b])=>b*gam(1+1/a),v:([a,b])=>b*b*(gam(1+2/a)-gam(1+1/a)**2),draw:([a,b])=>b*Math.pow(-Math.log(rand()),1/a),
-  est:s=>{const m=mean(s),cv=varS(s)/(m*m);let lo=.3,hi=100;for(let i=0;i<70;i++){const a=(lo+hi)/2;(gam(1+2/a)/gam(1+1/a)**2-1>cv)?lo=a:hi=a}const a=(lo+hi)/2;return[a,m/gam(1+1/a)]}},
+  est:s=>{if(s.some(v=>v<=0))return[NaN,NaN];const n=s.length,lx=s.slice().sort((a,b)=>a-b).map(Math.log),y=lx.map((_,i)=>Math.log(-Math.log(1-(i+1-.3)/(n+.4)))),mx_=mean(lx),my=mean(y);let sxy=0,sxx=0;lx.forEach((v,i)=>{sxy+=(v-mx_)*(y[i]-my);sxx+=(v-mx_)**2});const a=sxy/sxx;return[a,mean(s)/gam(1+1/a)]}},
 ];
 const bySlug=s=>Math.max(0,LAWS.findIndex(l=>l.slug===s));
 
@@ -125,7 +137,7 @@ const DOC=[
   rows:[["Fonction de masse",String.raw`P(X=k)=\binom{n}{k}\,p^{k}(1-p)^{n-k},\qquad k\in\{0,\dots,n\}`],
         ["Support",String.raw`k\in\{0,1,\dots,n\},\qquad n\in\mathbb{N}^*,\quad p\in[0,1]`]],
   E:String.raw`E[X]=np`,V:String.raw`\mathrm{Var}(X)=np(1-p)`,
-  ef:[String.raw`\hat n=\dfrac{m_1}{\hat p}`,String.raw`\hat p=1-\dfrac{\mu_2}{m_1}`]},
+  ef:[String.raw`\hat n=\operatorname{arrondi}\!\left(\dfrac{m_1}{\hat p}\right)`,String.raw`\hat p=1-\dfrac{\mu_2}{m_1}`]},
  {nt:String.raw`X\sim\mathcal{P}(\lambda)`,
   desc:"La loi de Poisson modélise le nombre d'événements rares survenant dans un intervalle fixe, lorsqu'ils arrivent indépendamment les uns des autres à un taux moyen λ.",
   rows:[["Fonction de masse",String.raw`P(X=k)=e^{-\lambda}\,\dfrac{\lambda^{k}}{k!},\qquad k\in\mathbb{N}`],
@@ -148,7 +160,7 @@ const DOC=[
         ["Fonction de répartition",String.raw`F(x,a,b)=\begin{cases}0, & x<a\\[2pt] \dfrac{x-a}{b-a}, & a\le x\le b\\[4pt] 1, & x>b\end{cases}`],
         ["Support",String.raw`x\in[a,b],\qquad a<b`]],
   E:String.raw`E[X]=\dfrac{a+b}{2}`,V:String.raw`\mathrm{Var}(X)=\dfrac{(b-a)^{2}}{12}`,
-  ef:[String.raw`\hat a=m_1-\sqrt{3\mu_2}`,String.raw`\hat b=m_1+\sqrt{3\mu_2}`]},
+  ef:[String.raw`\hat a=\min_i x_i`,String.raw`\hat b=\max_i x_i`]},
  {nt:String.raw`X\sim\mathcal{E}(\lambda)`,
   desc:"La loi exponentielle décrit le temps d'attente avant un événement dans un processus sans mémoire, de taux λ.",
   rows:[["Densité",String.raw`f(x,\lambda)=\lambda e^{-\lambda x},\qquad x\ge 0`],
@@ -179,7 +191,7 @@ const DOC=[
         ["Support",String.raw`x\ge 0,\qquad a>0,\qquad b>0`]],
   E:String.raw`E[X]=b\,\Gamma\!\left(1+\dfrac{1}{a}\right)`,
   V:String.raw`\mathrm{Var}(X)=b^{2}\left[\Gamma\!\left(1+\dfrac{2}{a}\right)-\Gamma\!\left(1+\dfrac{1}{a}\right)^{2}\right]`,
-  ef:[String.raw`\hat a:\ \dfrac{\Gamma(1+2/a)}{\Gamma(1+1/a)^{2}}-1=\dfrac{\mu_2}{m_1^{2}}`,String.raw`\hat b=\dfrac{m_1}{\Gamma(1+1/\hat a)}`]},
+  ef:[String.raw`\hat a=\dfrac{\sum_i\left(\ln x_{(i)}-\overline{\ln x}\right)\left(y_i-\bar y\right)}{\sum_i\left(\ln x_{(i)}-\overline{\ln x}\right)^{2}},\quad y_i=\ln\!\left(-\ln\!\left(1-\tfrac{i-0.3}{n+0.4}\right)\right)`,String.raw`\hat b=\dfrac{m_1}{\Gamma(1+1/\hat a)}`]},
 ];
 const STATS=[
  ["Observations",String.raw`n`,s=>s.length],

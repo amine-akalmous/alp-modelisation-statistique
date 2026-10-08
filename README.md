@@ -43,6 +43,8 @@ python -m pytest -q
 ## Conventions de calcul
 
 - Variance descriptive avec le diviseur n.
+- Weibull, formule explicite : a par moindres carrés sur la fonction de répartition linéarisée (rangs médians (i − 0,3)/(n + 0,4)), puis b = m₁ / Γ(1 + 1/a).
+- Graphes de l'exponentielle, de la Gamma et de la Weibull tracés sur [0, F⁻¹(0,999)] (conventions scipy.stats : Gamma avec scale = 1/b).
 - Géométrique : support {1, 2, …}. Gamma : forme a, **taux** b. Weibull : forme a, échelle b.
 - Lois uniformes : la vraisemblance n'est pas dérivable, la montée de gradient ne s'applique pas.
 - Binomiale : n est fixé (estimation par les moments, arrondie) et seul p est obtenu par gradient.

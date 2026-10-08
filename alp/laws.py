@@ -95,8 +95,9 @@ def _bernoulli() -> Law:
 
 def _binomiale() -> Law:
     def moments(x):
+        """p = 1 − μ₂/m₁, puis n = m₁/p arrondi à l'entier le plus proche (n est un nombre d'épreuves)."""
         m = float(x.mean()); p = 1 - float(x.var()) / m if m > 0 else float("nan")
-        return [m / p, p] if 0 < p < 1 else [float("nan"), float("nan")]
+        return [float(max(1, round(m / p))), p] if 0 < p < 1 else [float("nan"), float("nan")]
 
     def prepare(x):
         s = _mean_stats(x)
@@ -166,15 +167,15 @@ def _uniforme_discrete() -> Law:
 
 def _uniforme_continue() -> Law:
     def moments(x):
-        m = float(x.mean()); d = math.sqrt(3 * float(x.var()))
-        return [m - d, m + d]
+        """Estimateur explicite du maximum de vraisemblance : le plus petit et le plus grand échantillon."""
+        return [float(x.min()), float(x.max())]
     return Law(
         "uniforme-continue", "Uniforme continue", False, ["a", "b"],
         check=lambda p: None if p[0] < p[1] else "Il faut a < b.",
         frozen=lambda p: stats.uniform(loc=p[0], scale=p[1] - p[0]),
         moments=moments,
         no_gradient="La vraisemblance dépend du minimum et du maximum des données : elle n'est pas dérivable, "
-                    "la montée de gradient ne s'applique pas.")
+                    "la montée de gradient ne s'applique pas. L'estimateur explicite est déjà celui du maximum de vraisemblance.")
 
 
 def _exponentielle() -> Law:
@@ -236,14 +237,20 @@ def _gamma() -> Law:
 
 def _weibull() -> Law:
     def moments(x):
-        m = float(x.mean()); cv = float(x.var()) / (m * m)
-        lo, hi = 0.3, 100.0
-        g = lambda a: math.exp(special.gammaln(1 + 2 / a) - 2 * special.gammaln(1 + 1 / a)) - 1
-        for _ in range(80):
-            a = (lo + hi) / 2
-            lo, hi = (a, hi) if g(a) > cv else (lo, a)
-        a = (lo + hi) / 2
-        return [a, m / math.exp(special.gammaln(1 + 1 / a))]
+        """Forme a : moindres carrés sur la fonction de répartition linéarisée
+        (ln(−ln(1 − F)) = a·ln x − a·ln b, rangs médians de Bernard (i − 0,3)/(n + 0,4)) ;
+        échelle b : premier moment, b = m₁ / Γ(1 + 1/a)."""
+        if (x <= 0).any():
+            return [float("nan"), float("nan")]
+        n = x.size
+        lx = np.log(np.sort(x))
+        y = np.log(-np.log(1 - (np.arange(1, n + 1) - 0.3) / (n + 0.4)))
+        dx = lx - lx.mean()
+        sxx = float(dx @ dx)
+        if sxx == 0:
+            return [float("nan"), float("nan")]
+        a = float(dx @ (y - y.mean())) / sxx
+        return [a, float(x.mean()) / math.exp(special.gammaln(1 + 1 / a))]
 
     def prepare(x):
         s = _mean_stats(x); s["x"] = x; s["mlog"] = float(np.log(x).mean())
@@ -330,7 +337,7 @@ def describe(x: np.ndarray) -> dict:
             "skew": mu3 / mu2 ** 1.5 if mu2 > 0 else None, "kurt": mu4 / mu2 ** 2 - 3 if mu2 > 0 else None}
 
 
-def gradient_ascent(law: Law, x: np.ndarray, max_iter: int = 3000, tol: float = 1e-9) -> dict:
+def gradient_ascent(law: Law, x: np.ndarray, max_iter: int = 3000, tol: float = 1e-16) -> dict:
     """Maximise la log-vraisemblance moyenne par montée de gradient (pas d'Armijo)."""
     if law.gradient is None:
         return {"applicable": False, "reason": law.no_gradient}
