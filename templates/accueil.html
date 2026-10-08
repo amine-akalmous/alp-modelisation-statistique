@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/style.css">
-<script src="/static/site.js"></script>
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('site.js') }}"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--a1)"/><stop offset="1" style="stop-color:var(--a1)"/></linearGradient></defs></svg>
@@ -74,7 +74,7 @@
 
 {% include "_footer.html" %}
 
-<script src="/static/lois.js"></script>
+<script src="{{ asset('lois.js') }}"></script>
 <script>
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 

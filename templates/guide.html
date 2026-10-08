@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<link rel="stylesheet" href="/static/style.css">
-<script src="/static/site.js"></script>
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('site.js') }}"></script>
 </head>
 <body>
 
@@ -127,7 +127,7 @@
 
 {% include "_footer.html" %}
 
-<script src="/static/lois.js"></script>
+<script src="{{ asset('lois.js') }}"></script>
 <script>
 $("#choose").innerHTML=chooseRows();
 document.querySelectorAll(".tx").forEach(e=>katex.render(e.dataset.t,e,{throwOnError:false}));
