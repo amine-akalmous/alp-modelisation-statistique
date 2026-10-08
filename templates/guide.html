@@ -23,13 +23,13 @@
     <div class="gridbg"></div>
     <div class="wrap">
       <div class="ghero">
-        <span class="tag reveal"><i></i>Le guide · 6 étapes · 10 minutes</span>
+        <span class="tag reveal"><i></i>Le guide · 5 étapes · 10 minutes</span>
         <h1 class="reveal d1">Avant de simuler,<br><span class="grad">comprendre.</span></h1>
         <p class="lead reveal d2">Une loi de probabilité est un modèle. Elle n'est utile que si l'on sait ce que représente la variable, ce que l'on attend du modèle et quelles hypothèses on accepte en l'utilisant.</p>
       </div>
       <div class="gmap reveal d3">
         <a href="#choisir"><b>01</b>Identifier sa variable</a><a href="#lire"><b>02</b>Lire les grandeurs</a><a href="#simulation"><b>03</b>Comprendre la simulation</a>
-        <a href="#donnees"><b>04</b>Importer ses données</a><a href="#interpreter"><b>05</b>Interpréter avec soin</a><a href="#conventions"><b>06</b>Conventions &amp; sources</a>
+        <a href="#donnees"><b>04</b>Importer ses données</a><a href="#interpreter"><b>05</b>Interpréter avec soin</a>
       </div>
     </div>
   </div>
@@ -41,8 +41,7 @@
       <a href="#lire"><b>02</b>Lire</a>
       <a href="#simulation"><b>03</b>Simuler</a>
       <a href="#donnees"><b>04</b>Importer</a>
-      <a href="#interpreter"><b>05</b>Interpréter</a>
-      <a href="#conventions"><b>06</b>Conventions</a>
+      <a href="#interpreter"><b>05</b>Interpréter</a>
     </nav>
 
     <div>
@@ -106,19 +105,6 @@
           <div><b>Indépendance</b><span>Les méthodes supposent des observations indépendantes et de même loi.</span></div>
         </div>
         <p>Avant d'ajuster, examinez les conditions d'acquisition : dérive d'un capteur, changement de réglage, valeurs aberrantes, effets systématiques. La méthode des moments est sensible aux valeurs extrêmes, surtout sur de petits échantillons. Enfin, ajuster une loi n'est pas une évaluation d'incertitude de mesure au sens métrologique.</p>
-      </section>
-
-      <section class="card gsec reveal" id="conventions">
-        <span class="label">06 · Transparence</span>
-        <h2>Des conventions explicites</h2>
-        <p>Les propriétés et les courbes sont calculées dans le navigateur ; la simulation, les statistiques descriptives et l'estimation sont calculées sur le serveur en Python, avec NumPy et SciPy. La variance <span class="tx" data-t="\mu_2"></span> utilise le diviseur <strong>n</strong>.</p>
-        <p>Deux estimateurs sont donnés côte à côte. La <strong>formule explicite</strong> est la méthode des moments ; pour Weibull, a est obtenu par moindres carrés sur la fonction de répartition linéarisée (rangs médians), puis b par le premier moment. Pour la binomiale, n est arrondi à l'entier le plus proche. La <strong>montée de gradient</strong> maximise la log-vraisemblance moyenne : on part d'une valeur simple, puis on avance pas à pas dans la direction du gradient, avec une longueur de pas ajustée à chaque itération (règle d'Armijo), jusqu'à ce que le gradient s'annule. Les paramètres positifs sont transformés en logarithme et les probabilités en logit, pour que les contraintes soient toujours respectées. Pour les lois uniformes, la vraisemblance n'est pas dérivable : la montée de gradient ne s'applique pas. Pour la binomiale, n est fixé et seul p est obtenu par gradient.</p>
-        <p>La géométrique commence à 1 ; Gamma utilise la convention forme a et taux b, Weibull la convention forme a et échelle b. Les courbes sont tracées sur une fenêtre centrale et le site ne calcule pas de p-valeur d'adéquation.</p>
-        <ul class="src">
-          <li><a href="https://docs.scipy.org/doc/scipy/reference/stats.html" target="_blank" rel="noopener">SciPy · scipy.stats ↗</a><span>distributions et estimation en Python</span></li>
-          <li><a href="https://www.itl.nist.gov/div898/handbook/" target="_blank" rel="noopener">NIST/SEMATECH · e-Handbook of Statistical Methods ↗</a><span>référence d'ingénierie statistique</span></li>
-          <li><a href="https://www.bipm.org/en/committees/jc/jcgm/publications" target="_blank" rel="noopener">JCGM · guides sur l'incertitude de mesure (GUM) ↗</a><span>métrologie</span></li>
-        </ul>
         <div class="actions"><a class="btn primary" href="/#lois">Passer aux lois →</a></div>
       </section>
     </div>

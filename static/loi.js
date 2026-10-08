@@ -224,8 +224,7 @@ function estSection(r,truth,n){
       <p>Log-vraisemblance moyenne finale : <b>${fmt(g.loglik,5)}</b>${g.note?`<br><span class="muted">${g.note}</span>`:""}</p></div>
       <canvas id="conv" aria-label="Convergence de la log-vraisemblance au fil des itérations"></canvas></div>`
     :`<div class="card conv"><div class="convtxt"><span class="label">Montée de gradient</span><p class="muted">${g.reason}</p></div></div>`;
-  return`<section class="dsec"><h4><b>${n}</b>Estimation des paramètres</h4>${table(cols,head,rows)}${conv}
-  <p class="note">Calculs faits en Python (NumPy, SciPy). « Formule » : méthode des moments ; « Gradient » : maximum de vraisemblance obtenu par montée de gradient. <a href="/guide#conventions">Conventions de calcul</a></p></section>`;
+  return`<section class="dsec"><h4><b>${n}</b>Estimation des paramètres</h4>${table(cols,head,rows)}${conv}</section>`;
 }
 /* Courbe de convergence : log-vraisemblance moyenne en fonction de l'itération (axe logarithmique) */
 function drawConv(anim){
@@ -280,6 +279,14 @@ function bindPlot(){
   cv.addEventListener("mousemove",e=>{const r=cv.getBoundingClientRect();st.hx=geo.x0+(e.clientX-r.left-geo.Lm)/(geo.W-geo.Lm-geo.Rm)*(geo.x1-geo.x0);draw()});
   cv.addEventListener("mouseleave",()=>{st.hx=null;draw()});
 }
+/* Graduations de l'axe des abscisses, adaptées à chaque graphe :
+   loi continue → 9 graduations régulières du début à la fin exacte de l'axe ;
+   loi discrète → les valeurs entières, en sautant des valeurs seulement s'il y en a beaucoup. */
+function xTicks(a,b,disc){
+  if(disc){const lo=Math.ceil(a)+0,hi=Math.floor(b),step=Math.max(1,Math.ceil((hi-lo+1)/25)),t=[];for(let k=lo;k<=hi;k+=step)t.push(k+0);return t}
+  return Array.from({length:9},(_,i)=>a+(b-a)*i/8);
+}
+const xDecimals=(a,b,disc)=>{if(disc)return 0;const s=b-a;return s>=100?0:s>=10?1:s>=1?2:3};
 function niceTicks(a,b,disc){
   const raw=(b-a)/6,mag=10**Math.floor(Math.log10(raw));let step=[1,2,5,10].map(m=>m*mag).find(s=>s>=raw);if(disc)step=Math.max(1,Math.round(step));
   const t=[];for(let x=Math.ceil(a/step-1e-9)*step;x<=b+1e-9;x+=step)t.push(+x.toFixed(10));return t;
@@ -324,8 +331,6 @@ function legend(){
   $("#legend").innerHTML=st.tab==="props"?s("var(--a1)",L().disc?"P(X = k)":"f(x)"):
     st.tab==="sim"?(st.sample?s("var(--a1)","Loi théorique")+s("rgba(10,15,30,.35)","Échantillon simulé")+s("dash","Loi estimée"):""):
     (st.data?s("rgba(10,15,30,.35)","Vos données")+s("var(--a1)","Loi ajustée (paramètres estimés)"):"");
-  const m=st.model;
-  if(m&&POS.includes(L().slug)&&!m.empty)$("#legend").innerHTML+=`<span class="muted">Axe : 0 → F⁻¹(0,999) = ${fmt(m.x1,3)}${m.beyond?` · ${m.beyond} valeur${m.beyond>1?"s":""} au-delà, non dessinée${m.beyond>1?"s":""}`:""}</span>`;
 }
 function refresh(){buildModel();legend();draw()}   // legend() lit st.model : construit juste avant
 function draw(){
@@ -338,7 +343,9 @@ function draw(){
   const sx=x=>Lm+(x-x0)/(x1-x0)*(W-Lm-Rm),sy=y=>H-Bm-y/ymax*(H-Bm-Tm);
   Object.assign(geo,{x0,x1,Lm,Rm,W});
   ctx.font="11px 'JetBrains Mono',monospace";ctx.lineWidth=1;
-  niceTicks(x0,x1,l.disc).forEach(x=>{ctx.strokeStyle="#f0f2f6";ctx.beginPath();ctx.moveTo(sx(x),Tm);ctx.lineTo(sx(x),H-Bm);ctx.stroke();ctx.fillStyle="#6b7385";ctx.textAlign="center";ctx.fillText(fmt(x,3),sx(x),H-Bm+17)});
+  const xt=xTicks(x0,x1,l.disc),xd=xDecimals(x0,x1,l.disc);
+  xt.forEach((x,i)=>{ctx.strokeStyle="#f0f2f6";ctx.beginPath();ctx.moveTo(sx(x),Tm);ctx.lineTo(sx(x),H-Bm);ctx.stroke();ctx.fillStyle="#6b7385";
+    ctx.textAlign=l.disc?"center":i===0?"left":i===xt.length-1?"right":"center";ctx.fillText(fmt(x,xd),sx(x),H-Bm+17)});
   niceTicks(0,ymax,0).forEach(y=>{ctx.strokeStyle="#f0f2f6";ctx.beginPath();ctx.moveTo(Lm,sy(y));ctx.lineTo(W-Rm,sy(y));ctx.stroke();ctx.fillStyle="#6b7385";ctx.textAlign="right";ctx.fillText(fmt(y,3),Lm-8,sy(y)+4)});
   ctx.strokeStyle="#0a0f1e";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(Lm,H-Bm);ctx.lineTo(W-Rm,H-Bm);ctx.moveTo(Lm,Tm);ctx.lineTo(Lm,H-Bm);ctx.stroke();
   ctx.save();ctx.beginPath();ctx.rect(Lm,Tm-4,(W-Lm-Rm)*st.reveal+2,H-Tm-Bm+8);ctx.clip();
@@ -379,5 +386,3 @@ addEventListener("resize",()=>{draw();drawConv(false)});addEventListener("themec
 /* ====== Démarrage ====== */
 buildSwitch();head();render(true);
 document.fonts.ready.then(draw);
-(function(){const d=$("#before");let seen=null;try{seen=localStorage.getItem("alp-before")}catch(e){}
-  if(!seen)d.open=true;d.addEventListener("toggle",()=>{if(!d.open)try{localStorage.setItem("alp-before","1")}catch(e){}})})();
