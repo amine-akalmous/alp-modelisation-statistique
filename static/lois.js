@@ -191,14 +191,14 @@ const DOC=[
         ["Support",String.raw`x\ge 0,\qquad a>0,\qquad b>0`]],
   E:String.raw`E[X]=b\,\Gamma\!\left(1+\dfrac{1}{a}\right)`,
   V:String.raw`\mathrm{Var}(X)=b^{2}\left[\Gamma\!\left(1+\dfrac{2}{a}\right)-\Gamma\!\left(1+\dfrac{1}{a}\right)^{2}\right]`,
-  ef:[String.raw`\hat a=\dfrac{\sum_i\left(\ln x_{(i)}-\overline{\ln x}\right)\left(y_i-\bar y\right)}{\sum_i\left(\ln x_{(i)}-\overline{\ln x}\right)^{2}},\quad y_i=\ln\!\left(-\ln\!\left(1-\tfrac{i-0.3}{n+0.4}\right)\right)`,String.raw`\hat b=\dfrac{m_1}{\Gamma(1+1/\hat a)}`]},
+  ef:[String.raw`\hat a=\dfrac{\sum\limits_{i=1}^{n}\left(\ln x_{(i)}-\overline{\ln x}\right)\left(y_i-\bar y\right)}{\sum\limits_{i=1}^{n}\left(\ln x_{(i)}-\overline{\ln x}\right)^{2}},\quad y_i=\ln\!\left(-\ln\!\left(1-\tfrac{i-0.3}{n+0.4}\right)\right)`,String.raw`\hat b=\dfrac{m_1}{\Gamma(1+1/\hat a)}`]},
 ];
 const STATS=[
  ["Observations",String.raw`n`,s=>s.length],
  ["Minimum",String.raw`\min(x_1,\dots,x_n)`,mn],
  ["Maximum",String.raw`\max(x_1,\dots,x_n)`,mx],
- ["Moyenne",String.raw`m_1=\bar x_n=\dfrac1n\sum_{i=1}^n x_i`,mean],
- ["Variance",String.raw`\mu_2=\dfrac1n\sum_{i=1}^n(x_i-\bar x_n)^2`,varS],
+ ["Moyenne empirique",String.raw`\displaystyle m_{1}=\overline{x}_{n}=\frac{1}{n}\sum\limits_{i=1}^{n}x_{i}`,mean],
+ ["Variance empirique",String.raw`\displaystyle \mu_{2}=\frac{1}{n}\sum\limits_{i=1}^{n}\big(x_{i}-\overline{x}_{n}\big)^{2}`,varS],
  ["Asymétrie",String.raw`\gamma_1=\mu_3\big/\mu_2^{3/2}`,skew],
  ["Kurtosis",String.raw`\gamma_2=\mu_4\big/\mu_2^{2}-3`,kurt],
 ];

@@ -280,13 +280,17 @@ function bindPlot(){
   cv.addEventListener("mouseleave",()=>{st.hx=null;draw()});
 }
 /* Graduations de l'axe des abscisses, adaptées à chaque graphe :
-   loi continue → 9 graduations régulières du début à la fin exacte de l'axe ;
+   loi continue → comme matplotlib (Lib_Plot_densite.py) : au plus 9 intervalles, pas « rond »
+   choisi parmi 1, 2, 2,5, 5, 10 × 10^k (ex. 0, 2, 4 … 16 ou 0, 0,25 … 1,75) ;
    loi discrète → les valeurs entières, en sautant des valeurs seulement s'il y en a beaucoup. */
 function xTicks(a,b,disc){
-  if(disc){const lo=Math.ceil(a)+0,hi=Math.floor(b),step=Math.max(1,Math.ceil((hi-lo+1)/25)),t=[];for(let k=lo;k<=hi;k+=step)t.push(k+0);return t}
-  return Array.from({length:9},(_,i)=>a+(b-a)*i/8);
+  if(disc){const lo=Math.ceil(a)+0,hi=Math.floor(b),step=Math.max(1,Math.ceil((hi-lo+1)/25)),t=[];for(let k=lo;k<=hi;k+=step)t.push(k+0);t.step=step;return t}
+  const raw=(b-a)/9,mag=10**Math.floor(Math.log10(raw)),step=[1,2,2.5,5,10].map(s=>s*mag).find(s=>s>=raw*(1-1e-9)),t=[];
+  for(let k=Math.ceil(a/step-1e-9);k*step<=b+step*1e-9;k++)t.push(+(k*step).toFixed(12)+0);
+  t.step=step;return t;
 }
-const xDecimals=(a,b,disc)=>{if(disc)return 0;const s=b-a;return s>=100?0:s>=10?1:s>=1?2:3};
+/* Décimales affichées : juste ce qu'il faut pour écrire le pas (2 → 0, 0,2 → 1, 0,25 → 2) */
+const xDecimals=t=>{let d=0;while(d<8&&Math.abs(t.step*10**d-Math.round(t.step*10**d))>1e-6)d++;return d};
 function niceTicks(a,b,disc){
   const raw=(b-a)/6,mag=10**Math.floor(Math.log10(raw));let step=[1,2,5,10].map(m=>m*mag).find(s=>s>=raw);if(disc)step=Math.max(1,Math.round(step));
   const t=[];for(let x=Math.ceil(a/step-1e-9)*step;x<=b+1e-9;x+=step)t.push(+x.toFixed(10));return t;
@@ -305,9 +309,11 @@ function buildModel(){
   m.par=par;
   let[x0,x1]=par?l.rg(par):[mn(ext),mx(ext)];
   const pos=POS.includes(l.slug)&&par;
-  if(st.tab==="data"&&ext.length&&!pos){x0=Math.min(x0,mn(ext));x1=Math.max(x1,mx(ext));if(!l.disc){const pd=(x1-x0)*.05||1;x0-=pd;x1+=pd}}
+  if(st.tab==="data"&&ext.length&&!pos){x0=Math.min(x0,mn(ext));x1=Math.max(x1,mx(ext))}
   if(l.disc){x0-=.7;x1+=.7}
   m.x0=x0;m.x1=x1;
+  /* Fenêtre affichée : la courbe va de x0 à x1, l'axe ajoute 5 % de marge de chaque côté (comme matplotlib) */
+  const mg=l.disc?0:(x1-x0)*.05||1;m.v0=x0-mg;m.v1=x1+mg;
   if(par&&!m.empty)m.main=curveOf(l,par,x0,x1);
   if(st.tab==="sim"&&ext.length&&st.res&&fitOk(st.res.moments))m.estCurve=curveOf(l,st.res.moments,x0,x1);
   if(ext.length){
@@ -337,15 +343,15 @@ function draw(){
   const l=L(),m=st.model;if(!m||!cv)return;
   const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;
   cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);
-  const W=r.width,H=r.height,Lm=52,Rm=18,Tm=22,Bm=36,{x0,x1,ymax,main,hist,bw}=m;
+  const W=r.width,H=r.height,Lm=52,Rm=18,Tm=22,Bm=36,{x0,x1,v0,v1,ymax,main,hist,bw}=m;
   ctx.clearRect(0,0,W,H);
   if(m.empty){ctx.fillStyle="#6b7385";ctx.font="15px Inter,sans-serif";ctx.textAlign="center";ctx.fillText(m.empty,W/2,H/2);$("#tip").classList.remove("show");return}
-  const sx=x=>Lm+(x-x0)/(x1-x0)*(W-Lm-Rm),sy=y=>H-Bm-y/ymax*(H-Bm-Tm);
-  Object.assign(geo,{x0,x1,Lm,Rm,W});
+  const sx=x=>Lm+(x-v0)/(v1-v0)*(W-Lm-Rm),sy=y=>H-Bm-y/ymax*(H-Bm-Tm);
+  Object.assign(geo,{x0:v0,x1:v1,Lm,Rm,W});
   ctx.font="11px 'JetBrains Mono',monospace";ctx.lineWidth=1;
-  const xt=xTicks(x0,x1,l.disc),xd=xDecimals(x0,x1,l.disc);
-  xt.forEach((x,i)=>{ctx.strokeStyle="#f0f2f6";ctx.beginPath();ctx.moveTo(sx(x),Tm);ctx.lineTo(sx(x),H-Bm);ctx.stroke();ctx.fillStyle="#6b7385";
-    ctx.textAlign=l.disc?"center":i===0?"left":i===xt.length-1?"right":"center";ctx.fillText(fmt(x,xd),sx(x),H-Bm+17)});
+  const xt=xTicks(v0,v1,l.disc),xd=xDecimals(xt);
+  xt.forEach(x=>{ctx.strokeStyle="#f0f2f6";ctx.beginPath();ctx.moveTo(sx(x),Tm);ctx.lineTo(sx(x),H-Bm);ctx.stroke();ctx.fillStyle="#6b7385";
+    ctx.textAlign="center";ctx.fillText(fmt(x,xd),sx(x),H-Bm+17)});
   niceTicks(0,ymax,0).forEach(y=>{ctx.strokeStyle="#f0f2f6";ctx.beginPath();ctx.moveTo(Lm,sy(y));ctx.lineTo(W-Rm,sy(y));ctx.stroke();ctx.fillStyle="#6b7385";ctx.textAlign="right";ctx.fillText(fmt(y,3),Lm-8,sy(y)+4)});
   ctx.strokeStyle="#0a0f1e";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(Lm,H-Bm);ctx.lineTo(W-Rm,H-Bm);ctx.moveTo(Lm,Tm);ctx.lineTo(Lm,H-Bm);ctx.stroke();
   ctx.save();ctx.beginPath();ctx.rect(Lm,Tm-4,(W-Lm-Rm)*st.reveal+2,H-Tm-Bm+8);ctx.clip();
