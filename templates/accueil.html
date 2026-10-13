@@ -22,16 +22,25 @@
     <div class="gridbg"></div>
     <section class="wrap hero">
       <div>
-        <span class="tag reveal"><i></i>Atelier de lois de probabilité</span>
-        <h1 class="reveal d1">Voir la loi.<br>La simuler.<br>La <span class="grad">retrouver.</span></h1>
-        <p class="lead reveal d2">Dix lois usuelles, une même méthode : comprendre le modèle, générer des échantillons, puis estimer les paramètres à partir de vos propres mesures.</p>
+        <span class="tag reveal"><i></i>Atelier des lois de probabilité usuelles</span>
+        <h1 class="long reveal d1">Application d'une loi par le biais de la <span class="grad">visualisation</span>, de la <span class="grad">simulation</span> et de l'<span class="grad">estimation</span></h1>
+        <p class="lead intro reveal d2">Je suis apprenti ingénieur en systèmes électro&shy;niques, télé&shy;commu&shy;nications et infor&shy;matique à l'École d'ingénieurs du Conser&shy;vatoire national des arts et métiers (CNAM). Dans le cadre de mes études, je suis actif au sein du labo&shy;ratoire de recherche et dévelop&shy;pement EDF R&amp;D (Chatou).</p>
         <div class="actions reveal d3"><a class="btn primary" href="#avant">Commencer</a><a class="btn ghost" href="#lois">Aller aux lois</a></div>
-        <a class="author reveal d4" href="/a-propos"><img src="/static/img/photo.jpg" alt=""><span>Conçu et développé par <b>Amine Akalmous</b><small>Apprenti ingénieur R&amp;D chez EDF R&amp;D · élève ingénieur au CNAM</small></span><i>→</i></a>
+        <a class="author reveal d4" href="/a-propos"><img src="/static/img/photo.jpg" alt=""><span>Conçu et développé par <b>Amine Akalmous</b><small>Voir son parcours</small></span><i>→</i></a>
       </div>
       <div class="card viz reveal d2">
         <div class="vh"><div><b id="vName">Normale</b><br><span id="vNt"></span></div><div class="dots" id="vDots"></div></div>
         <canvas id="viz" aria-label="Courbes des dix lois, en transition"></canvas>
         <div class="vf"><div><small>E[X]</small><strong id="vE">0</strong></div><div><small>Var(X)</small><strong id="vV">1</strong></div><div><small>Type</small><strong id="vT">continue</strong></div></div>
+      </div>
+      <div class="card suite-card reveal">
+        <span class="label">Présentation du travail</span>
+        <div class="suite-cols">
+          <p>Sous la direction du Dr Dariush Ghorban&shy;zadeh (CNAM), ce travail a été réalisé. L'objectif de ce travail est de repré&shy;senter, simuler et mettre en pratique des lois de probabi&shy;lité usuelles pour les données expéri&shy;mentales. Il y a dix lois de probabi&shy;lité qui ont été choisies.</p>
+          <p>Les proprié&shy;tés théoriques de chaque loi sont présentées dans ce travail. Par la suite, il existe une interface homme-machine permettant de simuler (reproduire) la loi souhaitée en fonction de ses para&shy;mètres. Cela donne une idée de son compor&shy;tement en fonction des variations de ses para&shy;mètres.</p>
+          <p>L'estimation des para&shy;mètres est une étape importante dans la partie appli&shy;cation, et nous avons utilisé la méthode des moments ainsi que la méthode de la descente du gradient.</p>
+          <p>Dans le cadre de l'appli&shy;cation, l'IHM propose de sélec&shy;tionner un fichier externe. Pour cela, il serait essentiel d'avoir des fichiers au format texte avec une colonne.</p>
+        </div>
       </div>
     </section>
   </div>
@@ -59,7 +68,7 @@
       <div>
         <span class="label">Derrière ALP</span>
         <h3>Un outil conçu par un apprenti ingénieur R&amp;D</h3>
-        <p>ALP est un projet personnel d'<b>Amine Akalmous</b>, apprenti ingénieur R&amp;D chez EDF R&amp;D, où il travaille sur des instruments de mesure pour la ventilation nucléaire.</p>
+        <p>ALP a été conçu et développé par <b>Amine Akalmous</b>, élève ingénieur au CNAM et apprenti ingénieur R&amp;D chez EDF R&amp;D, sous la direction du Dr Dariush Ghorbanzadeh (CNAM).</p>
         <div class="mlogos"><img src="/static/img/edf.png" alt="EDF"><img src="/static/img/cnam.png" alt="Le Cnam"></div>
       </div>
       <a class="btn ghost" href="/a-propos">Découvrir son parcours →</a>
