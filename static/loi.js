@@ -20,10 +20,18 @@ const L=()=>LAWS[st.law],D=()=>DOC[st.law];
 
 /* ====== En-tête de la loi ====== */
 function buildSwitch(){
-  const a=(l,i)=>`<a href="/loi/${l.slug}" class="${i===st.law?"on":""}">${l.name}</a>`;
+  const a=(l,i)=>`<a href="/loi/${l.slug}" class="${i===st.law?"on":""}"${i===st.law?' aria-current="page"':""}>${l.name}</a>`;
   $("#switch").innerHTML=LAWS.map((l,i)=>l.disc?a(l,i):"").join("")+`<span class="sep"></span>`+LAWS.map((l,i)=>l.disc?"":a(l,i)).join("");
-  $("#switch .on")?.scrollIntoView({inline:"center",block:"nearest"});
+  const on=$("#switch .on");if(on){const n=$("#switch");n.scrollLeft=on.offsetLeft-(n.clientWidth-on.offsetWidth)/2}   // pastille active centrée si la rangée défile
+  syncTab();
 }
+/* Le mode ouvert (#props, #sim, #data) reste dans l'adresse : changer de loi garde le même mode */
+function syncTab(){
+  history.replaceState(null,"",st.tab==="props"?location.pathname:"#"+st.tab);
+  document.querySelectorAll("#switch a").forEach(a=>{a.hash=st.tab==="props"?"":st.tab});
+}
+function setTab(t){st.tab=t;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));syncTab()}
+{const h=location.hash.slice(1);if(["props","sim","data"].includes(h))setTab(h)}
 function head(){
   $("#kind").textContent=L().disc?"Loi discrète":"Loi continue";
   $("#lawName").textContent=L().name;$("#lbName").textContent=L().name;
@@ -36,7 +44,7 @@ new IntersectionObserver(([e])=>$("#lawbar").classList.toggle("stuck",!e.isInter
 
 $("#tabs").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.dataset.t===st.tab)return;
-  st.tab=b.dataset.t;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  setTab(b.dataset.t);
   render(true);
   const top=$("#lawbar").getBoundingClientRect().top+scrollY-70;if(scrollY>top)scrollTo({top,behavior:reduce?"auto":"smooth"});
 });
@@ -265,7 +273,7 @@ $("#view").addEventListener("click",e=>{
     $("#ta").value=s.map(v=>L().disc?v:+v.toFixed(4)).join("\n").replace(/\./g,",");st.col=0;parseData($("#ta").value)}
   if(e.target.closest("#fit")){
     const p=L().disc&&L().slug==="binomiale"?[Math.max(1,Math.round(st.dres.moments[0])),st.dres.moments[1]]:st.dres.moments.slice();st.sp=p.slice();st.n=Math.min(100000,Math.max(st.n,st.data.length));
-    st.tab="sim";document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x.dataset.t==="sim"));
+    setTab("sim");
     render(true);simulate();scrollTo({top:$("#lawbar").getBoundingClientRect().top+scrollY-70,behavior:reduce?"auto":"smooth"});
   }
 });

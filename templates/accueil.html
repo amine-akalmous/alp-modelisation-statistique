@@ -21,26 +21,26 @@
     <div class="aurora"><span></span><span></span><span></span></div>
     <div class="gridbg"></div>
     <section class="wrap hero">
-      <div>
+      <div class="h-text">
         <span class="tag reveal"><i></i>Atelier des lois de probabilité usuelles</span>
-        <h1 class="long reveal d1">Application d'une loi par le biais de la <span class="grad">visualisation</span>, de la <span class="grad">simulation</span> et de l'<span class="grad">estimation</span></h1>
-        <p class="lead intro reveal d2">Je suis apprenti ingénieur en systèmes électro&shy;niques, télé&shy;commu&shy;nications et infor&shy;matique à l'École d'ingénieurs du Conser&shy;vatoire national des arts et métiers (CNAM). Dans le cadre de mes études, je suis actif au sein du labo&shy;ratoire de recherche et dévelop&shy;pement EDF R&amp;D (Chatou).</p>
+        <h1 class="reveal d1"><span class="ln">Application d'une loi par le biais</span> <span class="ln">de la <span class="grad">visualisation</span>, de la <span class="grad">simulation</span></span> <span class="ln">et de l'<span class="grad">estimation</span></span></h1>
+        <p class="lead reveal d2">Je suis apprenti ingénieur en systèmes électro&shy;niques, télé&shy;commu&shy;nications et infor&shy;matique à l'École d'ingénieurs du Conser&shy;vatoire national des arts et métiers (CNAM). Dans le cadre de mes études, je suis actif au sein du labo&shy;ratoire de recherche et dévelop&shy;pement EDF R&amp;D (Chatou).</p>
+        <div class="pres reveal d2">
+          <span class="label">Présentation du travail</span>
+          <p>Sous la direction du Dr Dariush Ghorban&shy;zadeh (CNAM), ce travail a été réalisé. L'objectif de ce travail est de repré&shy;senter, simuler et mettre en pratique des lois de probabi&shy;lité usuelles pour les données expéri&shy;mentales. Il y a dix lois de probabi&shy;lité qui ont été choisies.</p>
+          <p>Les proprié&shy;tés théoriques de chaque loi sont présentées dans ce travail. Par la suite, il existe une interface homme-machine permettant de simuler (reproduire) la loi souhaitée en fonction de ses para&shy;mètres. Cela donne une idée de son compor&shy;tement en fonction des variations de ses para&shy;mètres. L'estimation des para&shy;mètres est une étape importante dans la partie appli&shy;cation, et nous avons utilisé la méthode des moments ainsi que la méthode de la descente du gradient.</p>
+          <p>Dans le cadre de l'appli&shy;cation, l'IHM propose de sélec&shy;tionner un fichier externe. Pour cela, il serait essentiel d'avoir des fichiers au format texte avec une colonne. Pour illustrer, il y a une collection de données qui peut être téléchargée <a class="dl" href="/static/data/Donnees_Test.zip" download>ici</a>.</p>
+        </div>
+      </div>
+      <!-- Colonne droite : graphe animé, puis les boutons et le profil, visibles dès l'arrivée -->
+      <div class="h-side">
+        <div class="card viz reveal d2">
+          <div class="vh"><div><b id="vName">Normale</b><br><span id="vNt"></span></div><div class="dots" id="vDots"></div></div>
+          <canvas id="viz" aria-label="Les dix lois tour à tour : courbe de densité pour une loi continue, bâtons pour une loi discrète"></canvas>
+          <div class="vf"><div><small>E[X]</small><strong id="vE">0</strong></div><div><small>Var(X)</small><strong id="vV">1</strong></div><div><small>Type</small><strong id="vT">continue</strong></div></div>
+        </div>
         <div class="actions reveal d3"><a class="btn primary" href="#avant">Commencer</a><a class="btn ghost" href="#lois">Aller aux lois</a></div>
         <a class="author reveal d4" href="/a-propos"><img src="/static/img/photo.jpg" alt=""><span>Conçu et développé par <b>Amine Akalmous</b><small>Voir son parcours</small></span><i>→</i></a>
-      </div>
-      <div class="card viz reveal d2">
-        <div class="vh"><div><b id="vName">Normale</b><br><span id="vNt"></span></div><div class="dots" id="vDots"></div></div>
-        <canvas id="viz" aria-label="Courbes des dix lois, en transition"></canvas>
-        <div class="vf"><div><small>E[X]</small><strong id="vE">0</strong></div><div><small>Var(X)</small><strong id="vV">1</strong></div><div><small>Type</small><strong id="vT">continue</strong></div></div>
-      </div>
-      <div class="card suite-card reveal">
-        <span class="label">Présentation du travail</span>
-        <div class="suite-cols">
-          <p>Sous la direction du Dr Dariush Ghorban&shy;zadeh (CNAM), ce travail a été réalisé. L'objectif de ce travail est de repré&shy;senter, simuler et mettre en pratique des lois de probabi&shy;lité usuelles pour les données expéri&shy;mentales. Il y a dix lois de probabi&shy;lité qui ont été choisies.</p>
-          <p>Les proprié&shy;tés théoriques de chaque loi sont présentées dans ce travail. Par la suite, il existe une interface homme-machine permettant de simuler (reproduire) la loi souhaitée en fonction de ses para&shy;mètres. Cela donne une idée de son compor&shy;tement en fonction des variations de ses para&shy;mètres.</p>
-          <p>L'estimation des para&shy;mètres est une étape importante dans la partie appli&shy;cation, et nous avons utilisé la méthode des moments ainsi que la méthode de la descente du gradient.</p>
-          <p>Dans le cadre de l'appli&shy;cation, l'IHM propose de sélec&shy;tionner un fichier externe. Pour cela, il serait essentiel d'avoir des fichiers au format texte avec une colonne.</p>
-        </div>
       </div>
     </section>
   </div>
@@ -106,30 +106,66 @@ $("#filters").addEventListener("click",e=>{
   $("#chooseText").textContent=i<0?"Sélectionnez votre situation pour voir la loi à explorer, ou ouvrez directement une loi.":CHOOSE[i][0]+" Une piste, pas une sélection automatique.";
 });
 
-/* Courbe animée qui passe d'une loi à l'autre (rapide) */
+/* Graphe animé qui passe d'une loi à l'autre :
+   loi continue → courbe de densité ; loi discrète → bâtons P(X = k), comme sur les pages des lois */
 (function(){
-  const c=$("#viz"),x=c.getContext("2d"),N=100,shapes=LAWS.map(L=>shape(L,N));
+  const c=$("#viz"),x=c.getContext("2d"),N=100;
+  const reps=LAWS.map(L=>{
+    const p=L.P.map(q=>q.v),[a,b]=L.rg(p);
+    if(L.disc){const ks=[];for(let k=Math.ceil(a);k<=Math.floor(b);k++)ks.push(k);
+      const ys=ks.map(k=>L.f(k,p)),m=Math.max(...ys);return{disc:true,a:ks[0]-.6,b:ks[ks.length-1]+.6,ks,ys:ys.map(y=>y/m)}}
+    const ys=Array.from({length:N},(_,i)=>L.f(a+(b-a)*i/(N-1),p)),m=Math.max(...ys.filter(Number.isFinite));
+    return{disc:false,a,b,ys:ys.map(y=>Number.isFinite(y)?Math.min(1,y/m):1)};
+  });
+  /* Graduations : entiers pour une loi discrète, pas « rond » (1, 2, 2,5, 5 × 10^k) pour une loi continue */
+  const ticks=r=>{
+    if(r.disc){const s=Math.max(1,Math.ceil(r.ks.length/12));return r.ks.filter((k,i)=>i%s===0)}
+    const raw=(r.b-r.a)/5,mag=10**Math.floor(Math.log10(raw)),st=[1,2,2.5,5,10].map(s=>s*mag).find(s=>s>=raw*.999),t=[];
+    for(let k=Math.ceil(r.a/st-1e-9);k*st<=r.b+st*1e-9;k++)t.push(+(k*st).toFixed(10)+0);return t;
+  };
   const NT=["X ~ B(θ)","X ~ B(n, p)","X ~ P(λ)","X ~ G(p)","X ~ U{a…b}","X ~ U([a, b])","X ~ E(λ)","X ~ N(μ, σ²)","X ~ Γ(a, b)","X ~ W(a, b)"];
-  $("#vDots").innerHTML=LAWS.map(()=>"<i></i>").join("");
-  let W=0,H=0,cur=7,prev=7,t0=0;
-  const HOLD=550,MORPH=420,ease=k=>k<.5?4*k*k*k:1-(-2*k+2)**3/2;
+  /* Ordre de passage : une loi discrète, puis une continue, en alternance */
+  const ids=LAWS.map((_,i)=>i),dI=ids.filter(i=>LAWS[i].disc),cI=ids.filter(i=>!LAWS[i].disc);
+  const ORDER=[];for(let i=0;i<Math.max(dI.length,cI.length);i++){if(i<dI.length)ORDER.push(dI[i]);if(i<cI.length)ORDER.push(cI[i])}
+  $("#vDots").innerHTML=ORDER.map(()=>"<i></i>").join("");
+  let W=0,H=0,pos=Math.max(0,ORDER.indexOf(7)),cur=ORDER[pos],prev=cur,t0=0;
+  const HOLD=550,MORPH=420,ease=k=>k<.5?4*k*k*k:1-(-2*k+2)**3/2,Lm=18,Rm=18,Tm=16,Bm=30;
   function size(){const r=c.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)}
   function label(){const L=LAWS[cur],p=L.P.map(q=>q.v);$("#vName").textContent=L.name;$("#vNt").textContent=NT[cur];
     $("#vE").textContent=fmt(L.m(p),3);$("#vV").textContent=fmt(L.v(p),3);$("#vT").textContent=L.disc?"discrète":"continue";
-    [...$("#vDots").children].forEach((e,i)=>e.classList.toggle("on",i===cur))}
-  function draw(now){
-    const el=now-t0,k=reduce?1:Math.min(1,el/MORPH),e=ease(k),a1=cssv("--a1"),a1r=cssv("--a1-rgb");
-    const ys=shapes[cur].map((y,i)=>shapes[prev][i]*(1-e)+y*e);
-    const L=12,R=12,T=16,B=26,sx=i=>L+(W-L-R)*i/(N-1),sy=y=>H-B-y*(H-B-T);
-    x.clearRect(0,0,W,H);
-    x.strokeStyle="rgba(10,15,30,.06)";x.lineWidth=1;
-    for(let i=0;i<=10;i++){const gx=L+(W-L-R)*i/10;x.beginPath();x.moveTo(gx,T);x.lineTo(gx,H-B);x.stroke()}
-    x.strokeStyle="rgba(10,15,30,.5)";x.beginPath();x.moveTo(L,H-B);x.lineTo(W-R,H-B);x.stroke();
+    [...$("#vDots").children].forEach((e,i)=>e.classList.toggle("on",i===pos))}
+  const sxv=(r,v)=>Lm+(W-Lm-Rm)*(v-r.a)/(r.b-r.a),sy=y=>H-Bm-y*(H-Bm-Tm);
+  function axis(r,al){
+    if(al<=.01)return;x.globalAlpha=al;x.font="11px 'JetBrains Mono',monospace";x.textAlign="center";
+    ticks(r).forEach(v=>{const gx=sxv(r,v);x.strokeStyle="rgba(10,15,30,.06)";x.lineWidth=1;x.beginPath();x.moveTo(gx,Tm);x.lineTo(gx,H-Bm);x.stroke();
+      x.fillStyle="#6b7385";x.fillText(fmt(v,2),gx,H-Bm+18)});
+    x.globalAlpha=1;
+  }
+  function curve(ys,al){
+    if(al<=.01)return;const a1=cssv("--a1"),a1r=cssv("--a1-rgb"),sx=i=>Lm+(W-Lm-Rm)*i/(N-1);x.globalAlpha=al;
     x.beginPath();x.moveTo(sx(0),sy(0));ys.forEach((y,i)=>x.lineTo(sx(i),sy(y)));x.lineTo(sx(N-1),sy(0));x.closePath();
-    const g=x.createLinearGradient(0,T,0,H-B);g.addColorStop(0,`rgba(${a1r},.26)`);g.addColorStop(1,`rgba(${a1r},.02)`);x.fillStyle=g;x.fill();
+    const g=x.createLinearGradient(0,Tm,0,H-Bm);g.addColorStop(0,`rgba(${a1r},.26)`);g.addColorStop(1,`rgba(${a1r},.02)`);x.fillStyle=g;x.fill();
     x.shadowColor=`rgba(${a1r},.4)`;x.shadowBlur=14;x.strokeStyle=a1;x.lineWidth=3;x.lineJoin="round";
-    x.beginPath();ys.forEach((y,i)=>i?x.lineTo(sx(i),sy(y)):x.moveTo(sx(i),sy(y)));x.stroke();x.shadowBlur=0;
-    if(!reduce&&!document.hidden){if(el>MORPH+HOLD){prev=cur;cur=(cur+1)%LAWS.length;t0=now;label()}requestAnimationFrame(draw)}
+    x.beginPath();ys.forEach((y,i)=>i?x.lineTo(sx(i),sy(y)):x.moveTo(sx(i),sy(y)));x.stroke();x.shadowBlur=0;x.globalAlpha=1;
+  }
+  function sticks(r,g,al){
+    if(al<=.01)return;const a1=cssv("--a1"),a1r=cssv("--a1-rgb");x.globalAlpha=al;x.lineCap="round";
+    r.ks.forEach((k,i)=>{const gx=sxv(r,k),gy=sy(r.ys[i]*g);
+      x.strokeStyle=`rgba(${a1r},.16)`;x.lineWidth=10;x.beginPath();x.moveTo(gx,H-Bm);x.lineTo(gx,gy);x.stroke();
+      x.strokeStyle=a1;x.lineWidth=2.6;x.beginPath();x.moveTo(gx,H-Bm);x.lineTo(gx,gy);x.stroke();
+      x.fillStyle=a1;x.strokeStyle="#fff";x.lineWidth=2;x.beginPath();x.arc(gx,gy,5,0,7);x.fill();x.stroke()});
+    x.lineCap="butt";x.globalAlpha=1;
+  }
+  const show=(r,g,al)=>r.disc?sticks(r,g,al):curve(r.ys.map(y=>y*g),al);
+  function draw(now){
+    const el=now-t0,k=reduce?1:Math.min(1,el/MORPH),e=ease(k),P=reps[prev],C=reps[cur];
+    x.clearRect(0,0,W,H);
+    axis(P,prev===cur?0:1-e);axis(C,prev===cur?1:e);
+    x.strokeStyle="rgba(10,15,30,.5)";x.lineWidth=1;x.beginPath();x.moveTo(Lm,H-Bm);x.lineTo(W-Rm,H-Bm);x.stroke();
+    if(!P.disc&&!C.disc)curve(C.ys.map((y,i)=>P.ys[i]*(1-e)+y*e),1);   // continue → continue : la courbe se déforme
+    else if(prev===cur)show(C,1,1);
+    else{show(P,1-e,1-e);show(C,e,e)}                                  // sinon : l'ancienne s'abaisse, la nouvelle monte
+    if(!reduce&&!document.hidden){if(el>MORPH+HOLD){prev=cur;pos=(pos+1)%ORDER.length;cur=ORDER[pos];t0=now;label()}requestAnimationFrame(draw)}
   }
   size();label();
   addEventListener("resize",()=>{size();draw(performance.now())});
