@@ -130,14 +130,21 @@ async function simulate(){
   if(!(isInt(n)&&n>=2&&n<=100000))return showErr("n doit être un entier compris entre 2 et 100 000.",["fn"]);
   const sv=$("#sd").value.trim(),sd=sv===""?null:num(sv);
   if(sd!==null&&!(isInt(sd)&&sd>=0&&sd<2**32))return showErr("La graine doit être un entier positif (ou laissée vide).",["fsd"]);
-  const go=$("#go");go.disabled=true;go.textContent="Calcul en cours…";
+  const go=$("#go");clearTimeout(st.btnT);go.classList.remove("ok","bad");go.classList.add("busy");go.disabled=true;go.textContent="Calcul en cours…";
+  let ok=false;
   try{
     const res=await api("/api/simulate",{law:L().slug,params:p,n,seed:sd});
-    st.sp=p;st.simP=res.params;st.n=n;st.seed=sd;st.dirty=false;st.sample=res.sample;st.res=res;
+    st.sp=p;st.simP=res.params;st.n=n;st.seed=sd;st.dirty=false;st.sample=res.sample;st.res=res;ok=true;
     if(st.tab!=="sim")return;
     $("#view").classList.add("anim");simResults();refresh();animate(true);
   }catch(err){showErr(err.message)}
-  finally{const b=$("#go");if(b){b.disabled=false;b.textContent="Simuler"}}
+  finally{
+    /* Retour visuel : vert + coche si la simulation a réussi, rouge si elle a échoué, puis retour à « Simuler » */
+    const b=$("#go");
+    if(b){b.disabled=false;b.classList.remove("busy");b.classList.add(ok?"ok":"bad");
+      b.innerHTML=ok?`<span class="tick">✓</span>Simulation réussie`:"Échec de la simulation";
+      st.btnT=setTimeout(()=>{const c=$("#go");if(c){c.classList.remove("ok","bad");c.textContent="Simuler"}},ok?2200:1600)}
+  }
 }
 
 /* ---- Application ---- */
@@ -148,30 +155,39 @@ function viewData(){
         <textarea class="ta" id="ta" spellcheck="false" placeholder="Tapez ou collez vos valeurs ici…&#10;une par ligne, ou séparées par des espaces ou des points-virgules">${st.dataText.replace(/</g,"&lt;")}</textarea>
         <div id="colbox"></div><div class="err" id="err"></div>
         <div class="row"><button class="btn ghost sm" id="pick">Ouvrir un fichier</button><button class="btn ghost sm" id="demo">Exemple</button></div>
+        <button class="btn primary block" id="est" style="margin-top:12px" disabled>Lancer l'estimation</button>
         <p class="hint">Virgule ou point pour les décimales ; fichier .txt ou .csv, à ouvrir ou à déposer ici. <a href="/guide#donnees">Formats acceptés</a></p>
         <div id="fitbox"></div></div>
       ${plotCard("Vos données et loi ajustée")}
     </div></section>
   <div id="datares"></div>`;
 }
-/* Les données sont envoyées au serveur (après une courte pause de frappe), qui renvoie l'analyse */
-let dataSeq=0,dataTimer=null;
-function requestEstimate(){
-  clearTimeout(dataTimer);const id=++dataSeq;
-  if(!st.data){st.dres=null;dataResults();refresh();return}
+/* Les données ne sont envoyées au serveur qu'au clic sur « Lancer l'estimation » */
+let dataSeq=0;
+async function estimate(){
+  if(!st.data)return;
+  const id=++dataSeq,b=$("#est");clearTimeout(st.btnT);
+  b.classList.remove("ok","bad");b.classList.add("busy");b.disabled=true;b.textContent="Calcul en cours…";
   $("#datares").innerHTML=`<section class="dsec"><div class="empty">Calcul en cours…</div></section>`;
-  dataTimer=setTimeout(async()=>{
-    try{const res=await api("/api/estimate",{law:L().slug,data:st.data});if(id!==dataSeq||st.tab!=="data")return;st.dres=res}
-    catch(err){if(id!==dataSeq)return;st.dres=null;showErr(err.message)}
-    dataResults();refresh();
-  },350);
+  let ok=false;
+  try{const res=await api("/api/estimate",{law:L().slug,data:st.data});if(id!==dataSeq||st.tab!=="data")return;st.dres=res;ok=true}
+  catch(err){if(id!==dataSeq)return;st.dres=null;showErr(err.message)}
+  finally{
+    /* Même retour visuel que « Simuler » : vert si l'estimation a réussi, rouge sinon */
+    const c=$("#est");
+    if(c&&id===dataSeq){c.disabled=false;c.classList.remove("busy");c.classList.add(ok?"ok":"bad");
+      c.innerHTML=ok?`<span class="tick">✓</span>Estimation réussie`:"Échec de l'estimation";
+      st.btnT=setTimeout(()=>{const e=$("#est");if(e){e.classList.remove("ok","bad");e.textContent="Lancer l'estimation"}},ok?2200:1600)}
+  }
+  if(id===dataSeq&&st.tab==="data"){dataResults();refresh();animate(true)}
 }
 function fitOk(e){return e&&e.every(v=>v!==null&&Number.isFinite(v))&&!L().check(e)}
 function dataResults(){
-  const r=st.dres,fb=$("#fitbox");if(!fb)return;
-  if(!st.data||!r){$("#datares").innerHTML=`<section class="dsec"><div class="empty">Tapez, collez ou importez des valeurs pour obtenir les statistiques descriptives et les paramètres estimés de la loi ${L().name}.</div></section>`;fb.innerHTML="";return}
+  const r=st.dres,fb=$("#fitbox");if(!fb)return;fb.innerHTML="";
+  if(!st.data){$("#datares").innerHTML=`<section class="dsec"><div class="empty">Tapez, collez ou importez des valeurs, puis cliquez sur « Lancer l'estimation » pour obtenir les statistiques descriptives et les paramètres estimés de la loi ${L().name}.</div></section>`;return}
+  if(!r){$("#datares").innerHTML=`<section class="dsec"><div class="empty">${st.data.length.toLocaleString("fr-FR")} valeurs prêtes. Cliquez sur « Lancer l'estimation » pour obtenir les statistiques descriptives et les paramètres estimés.</div></section>`;return}
   $("#datares").innerHTML=statsSection(r.stats,"02")+estSection(r,null,"03");drawConv(true);
-  fb.innerHTML=fitOk(r.moments)?`<button class="btn ghost block sm" id="fit" style="margin-top:12px">Simuler à partir de cet ajustement →</button>`:`<p class="hint">Ces données ne permettent pas d'ajuster la loi ${L().name} (paramètres hors domaine).</p>`;
+  if(!fitOk(r.moments))fb.innerHTML=`<p class="hint">Ces données ne permettent pas d'ajuster la loi ${L().name} (paramètres hors domaine).</p>`;
 }
 /* Tableau à plusieurs colonnes ? (séparateur ; ou tabulation, ou virgule avec décimales en point) */
 function asTable(text){
@@ -209,18 +225,54 @@ function parseData(text){
     const z=ok.filter(x=>x===0).length,zz=`${z} valeur${z>1?"s":""} nulle${z>1?"s":""}`;
     msg=L().slug==="gamma"?`${zz} : la montée de gradient demande des valeurs strictement positives (ln 0 n'existe pas). Seule la formule explicite est calculée.`
       :`${zz} : la loi de Weibull demande des valeurs strictement positives (ln 0 n'existe pas). Ni la formule explicite ni la montée de gradient ne peuvent être calculées.`}
-  st.data=ok.length>=2?ok:null;
+  /* Nouvelles valeurs : on efface l'ancienne analyse, sans relancer de calcul (il faut cliquer sur le bouton) */
+  const prev=st.data;st.data=ok.length>=2?ok:null;
+  const same=!!(prev&&st.data&&prev.length===st.data.length&&prev.every((x,i)=>x===st.data[i]));
+  if(!same){dataSeq++;st.dres=null}
   $("#cnt").textContent=ok.length?ok.length.toLocaleString("fr-FR")+" valeurs":"";
-  showErr(msg);requestEstimate();
+  const b=$("#est");if(b){b.disabled=!st.data;if(!same){clearTimeout(st.btnT);b.classList.remove("ok","bad","busy");b.textContent="Lancer l'estimation"}}
+  showErr(msg);dataResults();refresh();
 }
 function readFile(f){if(!f)return;const r=new FileReader();r.onload=()=>{$("#ta").value=String(r.result);st.col=0;parseData(r.result)};r.readAsText(f)}
 $("#file").addEventListener("change",e=>readFile(e.target.files[0]));
 
+/* ---- Téléchargement des résultats : rapport PDF ou classeur Excel, fabriqués par le serveur ---- */
+const DL_LABEL=`<span class="ico" aria-hidden="true">↓</span>Télécharger les résultats<span class="car">▾</span>`;
+const dlCtl=()=>`<div class="dl" id="dl">
+  <button class="btn sm dlb" id="dlbtn" aria-haspopup="menu" aria-expanded="false">${DL_LABEL}</button>
+  <div class="dlmenu" role="menu">
+    <button role="menuitem" data-f="pdf"><i class="ft pdf">PDF</i><span><b>Rapport PDF</b></span></button>
+    <button role="menuitem" data-f="xlsx"><i class="ft xls">XLS</i><span><b>Classeur Excel</b></span></button>
+  </div></div>`;
+function dlMenu(open){const d=$("#dl");if(!d)return;d.classList.toggle("open",open);$("#dlbtn").setAttribute("aria-expanded",open)}
+document.addEventListener("click",e=>{if(!e.target.closest("#dl"))dlMenu(false)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")dlMenu(false)});
+async function exportFile(format){
+  dlMenu(false);
+  const kind=st.tab==="sim"?"sim":"data",b=$("#dlbtn");
+  const body=kind==="sim"?{law:L().slug,kind,format,data:st.sample,params:st.simP,seed:st.seed}:{law:L().slug,kind,format,data:st.data};
+  clearTimeout(st.dlT);b.classList.remove("ok","bad");b.classList.add("busy");b.disabled=true;b.textContent="Préparation du fichier…";
+  let ok=false;
+  try{
+    const r=await fetch("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    if(!r.ok){let j=null;try{j=await r.json()}catch(e){}throw new Error(j&&j.error||"Le fichier n'a pas pu être créé. Réessayez.")}
+    const name=((r.headers.get("Content-Disposition")||"").match(/filename="([^"]+)"/)||[])[1]||`ALP.${format}`;
+    const a=document.createElement("a");a.href=URL.createObjectURL(await r.blob());a.download=name;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);ok=true;
+  }catch(err){showErr(err.message)}
+  finally{
+    const c=$("#dlbtn");
+    if(c){c.disabled=false;c.classList.remove("busy");c.classList.add(ok?"ok":"bad");
+      c.innerHTML=ok?`<span class="tick">✓</span>Fichier téléchargé`:"Échec du téléchargement";
+      st.dlT=setTimeout(()=>{const e=$("#dlbtn");if(e){e.classList.remove("ok","bad");e.innerHTML=DL_LABEL}},2200)}
+  }
+}
+
 /* ---- Tableaux de résultats (avec les relations) ---- */
 /* Statistiques calculées par le serveur (Python) */
 const STATKEYS=["n","min","max","mean","var","skew","kurt"];
-function statsSection(s,n){
-  return`<section class="dsec"><h4><b>${n}</b>Statistiques descriptives<small>n = ${s.n.toLocaleString("fr-FR")}</small></h4>${table("170px 1fr auto",["Statistique","Formule","Valeur"],STATS.map(([k,f],i)=>[cell("k",k),cell("f",T(f)),cell("v",fmt(s[STATKEYS[i]]??NaN,4))]))}</section>`;
+function statsSection(s,n){   /* le bouton de téléchargement occupe la droite du titre */
+  return`<section class="dsec"><h4 class="withdl"><b>${n}</b>Statistiques descriptives${dlCtl()}</h4>${table("170px 1fr auto",["Statistique","Formule","Valeur"],STATS.map(([k,f],i)=>[cell("k",k),cell("f",T(f)),cell("v",fmt(s[STATKEYS[i]]??NaN,4))]))}</section>`;
 }
 function estSection(r,truth,n){
   const g=r.gradient,gp=g.applicable?g.params:null;
@@ -271,11 +323,9 @@ $("#view").addEventListener("click",e=>{
   if(e.target.closest("#pick"))$("#file").click();
   if(e.target.closest("#demo")){const s=Array.from({length:300},()=>L().draw(L().P.map(q=>q.v)));
     $("#ta").value=s.map(v=>L().disc?v:+v.toFixed(4)).join("\n").replace(/\./g,",");st.col=0;parseData($("#ta").value)}
-  if(e.target.closest("#fit")){
-    const p=L().disc&&L().slug==="binomiale"?[Math.max(1,Math.round(st.dres.moments[0])),st.dres.moments[1]]:st.dres.moments.slice();st.sp=p.slice();st.n=Math.min(100000,Math.max(st.n,st.data.length));
-    setTab("sim");
-    render(true);simulate();scrollTo({top:$("#lawbar").getBoundingClientRect().top+scrollY-70,behavior:reduce?"auto":"smooth"});
-  }
+  if(e.target.closest("#est"))estimate();
+  if(e.target.closest("#dlbtn"))dlMenu(!$("#dl").classList.contains("open"));
+  const f=e.target.closest(".dlmenu [data-f]");if(f)exportFile(f.dataset.f);
 });
 $("#view").addEventListener("dragover",e=>{if(e.target.id==="ta")e.preventDefault()});
 $("#view").addEventListener("drop",e=>{if(e.target.id==="ta"){e.preventDefault();readFile(e.dataTransfer.files[0])}});
@@ -313,7 +363,9 @@ function buildModel(){
   const l=L(),m={main:[],hist:[],bw:1,estCurve:null,empty:null};
   let par=st.p,ext=[];
   if(st.tab==="sim"){if(!st.sample){m.empty="Aucun échantillon : cliquez sur « Simuler »."}else{ext=st.sample;par=st.simP}}
-  if(st.tab==="data"){if(!st.data){m.empty="Saisissez ou importez des valeurs pour voir l'histogramme et la loi ajustée."}else{ext=st.data;const e=st.dres&&st.dres.moments;par=fitOk(e)?e:null}}
+  if(st.tab==="data"){if(!st.data){m.empty="Saisissez ou importez des valeurs pour voir l'histogramme et la loi ajustée."}
+    else if(!st.dres){m.empty="Cliquez sur « Lancer l'estimation » pour analyser vos données."}
+    else{ext=st.data;const e=st.dres.moments;par=fitOk(e)?e:null}}
   m.par=par;
   let[x0,x1]=par?l.rg(par):[mn(ext),mx(ext)];
   const pos=POS.includes(l.slug)&&par;
@@ -344,7 +396,7 @@ function legend(){
   const s=(c,t)=>`<span><b style="background:${c==="dash"?"repeating-linear-gradient(90deg,var(--ink) 0 5px,transparent 5px 8px)":c}"></b>${t}</span>`;
   $("#legend").innerHTML=st.tab==="props"?s("var(--a1)",L().disc?"P(X = k)":"f(x)"):
     st.tab==="sim"?(st.sample?s("var(--a1)","Loi théorique")+s("rgba(10,15,30,.35)","Échantillon simulé")+s("dash","Loi estimée"):""):
-    (st.data?s("rgba(10,15,30,.35)","Vos données")+s("var(--a1)","Loi ajustée (paramètres estimés)"):"");
+    (st.data&&st.dres?s("rgba(10,15,30,.35)","Vos données")+s("var(--a1)","Loi ajustée (paramètres estimés)"):"");
 }
 function refresh(){buildModel();legend();draw()}   // legend() lit st.model : construit juste avant
 function draw(){

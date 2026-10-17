@@ -97,6 +97,29 @@ def test_api_estimate_hors_support(client):
     assert j["gradient"]["applicable"] is False
 
 
+@pytest.mark.parametrize("slug", ["poisson", "normale", "uniforme-continue"])
+def test_api_export(client, slug):
+    """Le rapport PDF et le classeur Excel se fabriquent, avec graphique et feuille des valeurs."""
+    import io
+    from openpyxl import load_workbook
+    sim = client.post("/api/simulate", json={"law": slug, "params": TRUE[slug], "n": 300, "seed": 1}).get_json()
+    body = {"law": slug, "kind": "sim", "data": sim["sample"], "params": TRUE[slug], "seed": 1}
+    pdf = client.post("/api/export", json={**body, "format": "pdf"})
+    assert pdf.status_code == 200 and pdf.data[:4] == b"%PDF"
+    assert f"ALP_{slug}_simulation_" in pdf.headers["Content-Disposition"]
+    xls = client.post("/api/export", json={**body, "format": "xlsx", "kind": "data", "params": None})
+    wb = load_workbook(io.BytesIO(xls.data))
+    assert wb.sheetnames == ["Rapport", "Données"] and len(wb["Rapport"]._charts) == 1
+    assert wb["Données"].max_row == 301
+    stats = {row[1]: row[2] for row in wb["Rapport"].iter_rows(values_only=True) if row[1] in ("Moyenne empirique", "Observations n")}
+    assert stats["Observations n"] == 300 and stats["Moyenne empirique"] == pytest.approx(sim["stats"]["mean"])
+
+
+def test_api_export_invalide(client):
+    assert client.post("/api/export", json={"law": "normale", "kind": "sim", "format": "docx", "data": [1, 2]}).status_code == 400
+    assert client.post("/api/export", json={"law": "normale", "kind": "sim", "format": "pdf", "data": [1, 2], "params": [0, -1]}).status_code == 400
+
+
 def test_api_requete_invalide(client):
     assert client.post("/api/estimate", data="pas du json", content_type="application/json").status_code == 400
     assert client.post("/api/estimate", json={"law": "normale", "data": [1]}).status_code == 400

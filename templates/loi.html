@@ -29,17 +29,17 @@
     <p class="lede" id="lede"></p>
   </div>
 
-  <!-- Barre des trois modes + pastilles des dix lois : reste visible pendant le défilement -->
+  <!-- Barre collante : 1) choisir la loi (pastilles), 2) choisir le mode (trois grands onglets) -->
   <div class="lawbar" id="lawbar">
+    <div class="wrap"><nav class="switch" id="switch" aria-label="Changer de loi"></nav></div>
     <div class="wrap lb">
-      <div class="lbname"><b id="lbName"></b><span id="lbNt"></span></div>
+      <div class="lbname" hidden><b id="lbName"></b><span id="lbNt"></span></div>
       <div class="tabs3" id="tabs" role="tablist">
         <button data-t="props" class="on" role="tab"><b>01</b><span>Propriétés<small>formules et moments</small></span></button>
         <button data-t="sim" role="tab"><b>02</b><span>Simulation<small>tirer un échantillon</small></span></button>
         <button data-t="data" role="tab"><b>03</b><span>Application<small>vos propres données</small></span></button>
       </div>
     </div>
-    <div class="wrap"><nav class="switch" id="switch" aria-label="Changer de loi"></nav></div>
   </div>
 
   <div class="wrap">

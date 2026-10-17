@@ -52,6 +52,34 @@ h2.big{font-size:clamp(32px,3.8vw,52px)}
 .btn.ghost:hover{border-color:var(--ink)}
 .btn.block{width:100%}
 .btn.sm{padding:10px 14px;font-size:13.5px}
+/* États du bouton « Simuler » : calcul en cours, réussite (vert), échec (rouge) */
+.btn.busy{cursor:progress;opacity:.9}
+.btn.busy::before{content:"";width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.primary.ok{background:#16a34a;box-shadow:0 10px 26px -12px rgba(22,163,74,.8);animation:okpop .45s cubic-bezier(.3,1.6,.5,1)}
+.btn.ok .tick{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);font-size:12px;line-height:1}
+@keyframes okpop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.btn.primary.bad{background:#dc2626;box-shadow:0 10px 26px -12px rgba(220,38,38,.8);animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+/* Menu « Télécharger les résultats » (PDF ou Excel), à droite du titre « Statistiques descriptives » */
+.dsec h4.withdl{align-items:center;flex-wrap:wrap}
+.dsec h4 .dl{margin-left:auto;font-family:var(--body);letter-spacing:0}
+.btn.dlb{background:var(--ink);color:#fff;padding:11px 16px;font-size:14px;box-shadow:0 10px 22px -14px rgba(10,15,30,.8)}
+.btn.dlb .ico{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.16);font-size:12px}
+.btn.dlb.ok{background:#16a34a}
+.btn.dlb.bad{background:#dc2626;animation:shake .4s}
+.dl{position:relative}
+.dl .car{display:inline-block;margin-left:2px;font-size:10px;transition:transform .2s}
+.dl.open .car{transform:rotate(180deg)}
+.dlmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:220px;padding:6px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px -18px rgba(10,15,30,.35);display:none}
+.dl.open .dlmenu{display:block;animation:menuin .16s ease-out}
+@keyframes menuin{from{opacity:0;transform:translateY(-4px)}}
+.dlmenu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer;transition:background .15s}
+.dlmenu button:hover,.dlmenu button:focus-visible{background:var(--soft)}
+.dlmenu b{display:block;font-size:14px;font-weight:600}
+.dlmenu small{display:block;font-size:12px;color:var(--muted)}
+.dlmenu .ft{flex:none;width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-style:normal;font-family:var(--mono);font-size:10.5px;font-weight:500;color:#fff}
+.dlmenu .ft.pdf{background:#d93025}.dlmenu .ft.xls{background:#1d7a45}
 .lnk{color:var(--a1-d);font-weight:500;background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;transition:background-size .25s}
 .lnk:hover{background-size:100% 1.5px}
 
@@ -108,7 +136,7 @@ nav.main a.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(10,15,3
 .h-side .actions .btn{justify-content:center;text-align:center}
 .h-side .author{margin-top:0;display:flex}.h-side .author i{margin-left:auto;padding-right:6px}
 .actions{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
-.viz{padding:18px;background:rgba(255,255,255,.7);backdrop-filter:blur(10px)}
+.viz{padding:18px;background:#fff}   /* opaque : le quadrillage du fond ne se mélange pas à celui du graphe */
 .viz canvas{display:block;width:100%;height:340px}
 .viz .vh{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px}
 .viz .vh b{font-family:var(--head);font-size:22px;letter-spacing:-.03em}
@@ -218,7 +246,8 @@ section.blk{padding:96px 0 0}
 .tabs button.on{background:var(--ink);color:#fff;box-shadow:0 6px 16px -8px rgba(10,15,30,.6)}
 .lede{margin-top:16px;font-size:16.5px;color:var(--ink-2);max-width:78ch}
 /* Pastilles des dix lois dans la barre collante : on change de loi sans remonter */
-.lawbar .switch{padding:10px 0 0;margin-top:10px;border-top:1px solid var(--line)}
+.lawbar .switch{padding:0 0 10px;margin-bottom:10px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.lawbar .switch::-webkit-scrollbar{display:none}
 .lawbar .switch a{font-size:13px;padding:5px 13px}
 .lawbar .switch a:first-child{margin-left:auto}.lawbar .switch a:last-child{margin-right:auto}   /* centrées, sans masquer le début si la rangée défile */
 details.before{margin-top:18px;border-radius:16px;background:linear-gradient(100deg,rgba(var(--a1-rgb),.07),rgba(var(--a2-rgb),.07));border:1px solid rgba(var(--a1-rgb),.18)}
@@ -240,8 +269,10 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .lbname span{font-size:15px;color:var(--muted)}
 .lawbar.stuck .lbname{opacity:1;transform:none}
 .lawbar.stuck{box-shadow:0 12px 30px -22px rgba(10,15,30,.4)}
-.tabs3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:1;max-width:760px;margin-left:auto}
-.tabs3 button{display:flex;align-items:center;gap:12px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 14px;cursor:pointer;transition:.2s;color:var(--ink)}
+.lbname[hidden]{display:none}
+/* Trois grands onglets sur toute la largeur, juste sous les pastilles des lois */
+.tabs3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex:1}
+.tabs3 button{display:flex;align-items:center;justify-content:center;gap:12px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:11px 16px;cursor:pointer;transition:.2s;color:var(--ink)}
 .tabs3 button b{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:500;background:var(--soft);color:var(--a1-d);transition:.2s}
 .tabs3 button span{font-family:var(--head);font-weight:600;font-size:15.5px;letter-spacing:-.02em;line-height:1.2}
 .tabs3 button small{display:block;font-family:var(--body);font-weight:400;font-size:12px;letter-spacing:0;color:var(--muted)}

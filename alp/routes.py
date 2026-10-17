@@ -1,6 +1,7 @@
 """Pages du site et API de calcul."""
 from datetime import date
 
+import numpy as np
 from flask import Blueprint, Response, abort, current_app, jsonify, render_template, request
 
 from .laws import LAWS, MAX_N, LawError, analyse, check_data, check_params, clean, get_law, simulate
@@ -116,8 +117,11 @@ def api_simulate():
     if seed is not None and not (isinstance(seed, (int, float)) and float(seed).is_integer() and 0 <= seed < 2 ** 32):
         raise LawError("La graine doit être un entier positif (ou laissée vide).")
     x = simulate(law, params, int(n), None if seed is None else int(seed))
+    # Échantillon arrondi à 6 chiffres significatifs, puis analysé tel quel : les résultats affichés
+    # et ceux d'un export (qui renvoie cet échantillon) sont ainsi exactement les mêmes.
+    x = np.array([float(f"{v:.6g}") for v in x.tolist()])
     out = analyse(law, x)
-    out["sample"] = clean([float(f"{v:.6g}") for v in x.tolist()])
+    out["sample"] = clean(x.tolist())
     out["params"] = params
     return jsonify(out)
 
@@ -129,6 +133,33 @@ def api_estimate():
     law = get_law(data.get("law"))
     x = check_data(data.get("data"))
     return jsonify(analyse(law, x))
+
+
+@bp.post("/api/export")
+def api_export():
+    """Rapport téléchargeable (PDF ou Excel) d'une simulation ou d'une estimation ; rien n'est conservé."""
+    data = _payload()
+    law = get_law(data.get("law"))
+    fmt, kind = data.get("format"), data.get("kind")
+    if fmt not in ("pdf", "xlsx") or kind not in ("sim", "data"):
+        raise LawError("Format d'export inconnu.")
+    x = check_data(data.get("data"))
+    truth = seed = None
+    if kind == "sim":
+        truth = check_params(law, data.get("params"))
+        seed = data.get("seed")
+        if seed is not None and not (isinstance(seed, (int, float)) and float(seed).is_integer() and 0 <= seed < 2 ** 32):
+            raise LawError("La graine doit être un entier positif (ou laissée vide).")
+        seed = None if seed is None else int(seed)
+    try:
+        from .export import build_report, to_pdf, to_xlsx
+    except ImportError:
+        raise LawError("L'export n'est pas encore installé sur le serveur (openpyxl, reportlab).") from None
+    report = build_report(law, x, kind, truth, seed, site=current_app.config["SITE_URL"])
+    body, mime = ((to_pdf(report), "application/pdf") if fmt == "pdf" else
+                  (to_xlsx(report), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+    name = f"ALP_{law.slug}_{'simulation' if kind == 'sim' else 'estimation'}_{date.today():%Y-%m-%d}.{fmt}"
+    return Response(body, mimetype=mime, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 @bp.get("/api/health")
