@@ -151,13 +151,19 @@ def api_export():
         if seed is not None and not (isinstance(seed, (int, float)) and float(seed).is_integer() and 0 <= seed < 2 ** 32):
             raise LawError("La graine doit être un entier positif (ou laissée vide).")
         seed = None if seed is None else int(seed)
-    try:
+    try:                                   # les deux bibliothèques de l'export sont vérifiées avant de commencer
+        import openpyxl  # noqa: F401
+        import reportlab  # noqa: F401
         from .export import build_report, to_pdf, to_xlsx
     except ImportError:
-        raise LawError("L'export n'est pas encore installé sur le serveur (openpyxl, reportlab).") from None
-    report = build_report(law, x, kind, truth, seed, site=current_app.config["SITE_URL"])
-    body, mime = ((to_pdf(report), "application/pdf") if fmt == "pdf" else
-                  (to_xlsx(report), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        raise LawError("L'export n'est pas encore installé sur le serveur (bibliothèques openpyxl et reportlab manquantes).") from None
+    try:
+        report = build_report(law, x, kind, truth, seed, site=current_app.config["SITE_URL"])
+        body, mime = ((to_pdf(report), "application/pdf") if fmt == "pdf" else
+                      (to_xlsx(report), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+    except Exception:                      # détail dans le journal d'erreurs du serveur, message clair pour l'utilisateur
+        current_app.logger.exception("Échec de l'export %s (%s)", fmt, law.slug)
+        raise LawError("Le fichier n'a pas pu être créé à cause d'une erreur du serveur.") from None
     name = f"ALP_{law.slug}_{'simulation' if kind == 'sim' else 'estimation'}_{date.today():%Y-%m-%d}.{fmt}"
     return Response(body, mimetype=mime, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
