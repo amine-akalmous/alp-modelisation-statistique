@@ -108,7 +108,7 @@ const LAWS=[
  {slug:"gamma",name:"Gamma",disc:0,ev:"E = a/b · Var = a/b²",
   P:[{s:"a",v:2,d:"a > 0 (forme)"},{s:"b",v:.5,d:"b > 0 (taux)"}],
   check:([a,b])=>!(a>0&&b>0)?"a et b doivent être strictement positifs.":null,
-  f:(x,[a,b])=>x<=0?0:Math.exp(a*Math.log(b)+(a-1)*Math.log(x)-b*x-lg(a)),
+  f:(x,[a,b])=>x<0?0:x===0?(a<1?Infinity:a===1?b:0):Math.exp(a*Math.log(b)+(a-1)*Math.log(x)-b*x-lg(a)),   // en 0 : infinie si a < 1 (point non tracé)
   F:(x,[a,b])=>gammp(a,b*x),rg:([a,b])=>[0,gammaPpf(Q_MAX,a,b)],
   m:([a,b])=>a/b,v:([a,b])=>a/(b*b),draw:([a,b])=>gammaDraw(a,1/b),
   est:s=>{const m=mean(s),v=varS(s);return[m*m/v,m/v]}},

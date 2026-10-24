@@ -269,10 +269,12 @@ async function exportFile(format){
 }
 
 /* ---- Tableaux de résultats (avec les relations) ---- */
+/* Nombre très petit mais non nul (ex. 0,00009384) : chiffres significatifs plutôt qu'un « 0 » trompeur */
+const fmtS=v=>Number.isFinite(v)&&v!==0&&Math.abs(v)<5e-4?v.toLocaleString("fr-FR",{maximumSignificantDigits:4}):fmt(v,4);
 /* Statistiques calculées par le serveur (Python) */
 const STATKEYS=["n","min","max","mean","var","skew","kurt"];
 function statsSection(s,n){   /* le bouton de téléchargement occupe la droite du titre */
-  return`<section class="dsec"><h4 class="withdl"><b>${n}</b>Statistiques descriptives${dlCtl()}</h4>${table("170px 1fr auto",["Statistique","Formule","Valeur"],STATS.map(([k,f],i)=>[cell("k",k),cell("f",T(f)),cell("v",fmt(s[STATKEYS[i]]??NaN,4))]))}</section>`;
+  return`<section class="dsec"><h4 class="withdl"><b>${n}</b>Statistiques descriptives${dlCtl()}</h4>${table("170px 1fr auto",["Statistique","Formule","Valeur"],STATS.map(([k,f],i)=>[cell("k",k),cell("f",T(f)),cell("v",fmtS(s[STATKEYS[i]]??NaN))]))}</section>`;
 }
 function estSection(r,truth,n){
   const g=r.gradient,gp=g.applicable?g.params:null;

@@ -28,6 +28,8 @@ def fr(v, d: int = 4) -> str:
         return v
     if isinstance(v, (int, np.integer)):
         s = f"{int(v):,}"
+    elif v != 0 and abs(v) < 5 * 10 ** -d:                        # très petit mais non nul : 4 chiffres significatifs
+        s = f"{float(v):.{3 - math.floor(math.log10(abs(v)))}f}".rstrip("0")
     else:
         s = f"{float(v):,.{d}f}"
     return s.replace(",", " ").replace(".", ",").replace("-", "−")
@@ -240,6 +242,8 @@ def to_xlsx(r: dict) -> bytes:
                 c = ws.cell(row + i, 2 + j, "—" if v is None else v)
                 if isinstance(v, (int, float)) and not isinstance(v, bool):
                     c.number_format = fmts[j] if not (isinstance(v, int) and fmts[j] == "0.0000") else "0"
+                    if isinstance(v, float) and v != 0 and abs(v) < 5e-4 and fmts[j] == "0.0000":
+                        c.number_format = "0.0000####"                  # très petit mais non nul : 0,00009384 et non 0,0000
                 c.alignment = Alignment(horizontal="right" if numeric[j] else "left")
         tables["n"] += 1
         last_col = chr(ord("B") + len(head) - 1)
