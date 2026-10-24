@@ -5,6 +5,7 @@ import numpy as np
 from flask import Blueprint, Response, abort, current_app, jsonify, render_template, request
 
 from .laws import LAWS, MAX_N, LawError, analyse, check_data, check_params, clean, get_law, simulate
+from .plot import for_sample
 
 bp = Blueprint("site", __name__)
 
@@ -123,6 +124,7 @@ def api_simulate():
     out = analyse(law, x)
     out["sample"] = clean(x.tolist())
     out["params"] = params
+    out["plot"] = for_sample(law, x, "sim", params, out["moments"])     # graphique calculé ici, affiché tel quel
     return jsonify(out)
 
 
@@ -132,7 +134,9 @@ def api_estimate():
     data = _payload()
     law = get_law(data.get("law"))
     x = check_data(data.get("data"))
-    return jsonify(analyse(law, x))
+    out = analyse(law, x)
+    out["plot"] = for_sample(law, x, "data", moments=out["moments"])
+    return jsonify(out)
 
 
 @bp.post("/api/export")

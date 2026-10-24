@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from .laws import Law, analyse
+from .plot import plot_data, valid
 
 
 # ---------------------------------------------------------------------------
@@ -28,8 +29,8 @@ def fr(v, d: int = 4) -> str:
         return v
     if isinstance(v, (int, np.integer)):
         s = f"{int(v):,}"
-    elif v != 0 and abs(v) < 5 * 10 ** -d:                        # très petit mais non nul : 4 chiffres significatifs
-        s = f"{float(v):.{3 - math.floor(math.log10(abs(v)))}f}".rstrip("0")
+    elif d >= 4 and v != 0 and abs(v) < 5 * 10 ** -d:             # valeur très petite mais non nulle : 4 chiffres significatifs
+        s = f"{float(v):.{3 - math.floor(math.log10(abs(v)))}f}".rstrip("0").rstrip(".")
     else:
         s = f"{float(v):,.{d}f}"
     return s.replace(",", " ").replace(".", ",").replace("-", "−")
@@ -41,88 +42,39 @@ def fr_short(v) -> str:
     return s.rstrip("0").rstrip(",") if "," in s else s
 
 
-def _valid(law: Law, p) -> bool:
-    return p is not None and all(v is not None and math.isfinite(v) for v in p) and not law.check(list(p))
+_valid = valid
 
 
 # ---------------------------------------------------------------------------
-# Distribution : mêmes choix que le graphique du site (static/loi.js, buildModel)
+# Distribution : le graphique calculé par alp/plot.py (le même que sur le site) et son tableau
 # ---------------------------------------------------------------------------
-POS = ("exponentielle", "gamma", "weibull")                  # lois tracées sur [0, F⁻¹(0,999)]
-
-
-def plot_range(law: Law, p) -> tuple[float, float]:
-    """Intervalle de tracé, identique à rg() dans static/lois.js."""
-    s = law.slug
-    if s == "bernoulli":
-        return 0.0, 1.0
-    if s == "binomiale":
-        return 0.0, float(round(p[0]))
-    if s == "poisson":
-        return 0.0, float(math.ceil(p[0] + 5 * math.sqrt(p[0]) + 3))
-    if s == "geometrique":
-        return 1.0, float(min(400, math.ceil(1 / p[0] + 4 * math.sqrt(1 - p[0]) / p[0]) + 1))
-    if s == "uniforme-discrete":
-        return float(p[0]), float(p[1])
-    if s == "uniforme-continue":
-        return p[0] - (p[1] - p[0]) * 0.25, p[1] + (p[1] - p[0]) * 0.25
-    if s == "normale":
-        return p[0] - 4 * math.sqrt(p[1]), p[0] + 4 * math.sqrt(p[1])
-    return 0.0, float(law.frozen(p).ppf(0.999))               # exponentielle, gamma, weibull
-
-
-def _jsround(v: float) -> int:
-    return math.floor(v + 0.5)                                 # Math.round de JavaScript
-
-
-def distribution(law: Law, x: np.ndarray, kind: str, ref, est) -> dict:
-    """Tableau et données du graphique. ref : loi théorique (simulation) ou ajustée (vos données) ;
-    est : loi estimée par la formule explicite (simulation seulement), tracée en pointillés comme sur le site."""
-    n = x.size
-    f_ref = law.frozen(ref) if ref is not None else None
-    f_est = law.frozen(est) if est is not None else None
-    x0, x1 = plot_range(law, ref) if ref is not None else (float(x.min()), float(x.max()))
-    if law.discrete:
-        k0, k1 = int(min(x0, x.min())), int(max(x1, x.max()))
-        ks = np.arange(k0, k1 + 1)
-        counts = np.array([int((x == k).sum()) for k in ks])
-        pr = f_ref.pmf(ks) if f_ref is not None else None
-        pe = f_est.pmf(ks) if f_est is not None else None
-        keep = (counts > 0) | ((pr if pr is not None else 0) >= 5e-5) | ((pe if pe is not None else 0) >= 5e-5)
-        idx = np.flatnonzero(keep)
-        sl = slice(idx[0], idx[-1] + 1) if idx.size else slice(0, len(ks))   # on retire les queues vides
-        ks, counts = ks[sl], counts[sl]
-        pr = pr[sl] if pr is not None else None
-        pe = pe[sl] if pe is not None else None
-        rows = [[int(k), int(c), c / n] + ([float(pr[i])] if pr is not None else []) + ([float(pe[i])] if pe is not None else [])
-                for i, (k, c) in enumerate(zip(ks, counts))]
-        return {"discrete": True, "rows": rows, "ks": ks.tolist(), "obs": (counts / n).tolist(),
-                "ref": None if pr is None else pr.tolist(), "est": None if pe is None else pe.tolist(), "beyond": 0}
-    pos = law.slug in POS and ref is not None
-    if kind == "data" and not pos:
-        x0, x1 = min(x0, float(x.min())), max(x1, float(x.max()))
-    a, b = (0.0, x1) if pos else (float(x.min()), float(x.max()))
-    nb = max(8, min(60, _jsround(math.sqrt(n) * 1.3)))
-    bw = (b - a) / nb or 1.0
-    inside = (x >= a) & (x <= b)
-    idx = np.minimum(nb - 1, np.floor((x[inside] - a) / bw).astype(int))
-    counts = np.bincount(idx, minlength=nb)
-    dens = counts / n / bw
-    centers = a + bw * (np.arange(nb) + 0.5)
-    dec = int(np.clip(3 - math.floor(math.log10(bw)), 0, 6))
-    dr = f_ref.pdf(centers) if f_ref is not None else None
-    de = f_est.pdf(centers) if f_est is not None else None
-    rows = []
-    for i in range(nb):
-        close = "]" if i == nb - 1 else "["
-        rows.append([f"[{fr(a + i * bw, dec)} ; {fr(a + (i + 1) * bw, dec)}{close}", round(float(centers[i]), dec + 1), int(counts[i]), float(dens[i])]
-                    + ([float(dr[i])] if dr is not None else []) + ([float(de[i])] if de is not None else []))
-    grid = np.linspace(x0, x1, 200)                             # 200 points, comme sur le site
-    with np.errstate(all="ignore"):
-        cr = f_ref.pdf(grid) if f_ref is not None else None
-        ce = f_est.pdf(grid) if f_est is not None else None
-    return {"discrete": False, "rows": rows, "a": a, "bw": bw, "dens": dens.tolist(), "x0": x0, "x1": x1, "grid": grid.tolist(),
-            "ref": None if cr is None else cr.tolist(), "est": None if ce is None else ce.tolist(), "beyond": int(n - inside.sum())}
+def distribution(law: Law, x: np.ndarray, ref, est) -> dict:
+    """Données du graphique + lignes du tableau. ref : loi théorique (simulation) ou ajustée (vos données) ;
+    est : loi estimée par la formule explicite (simulation seulement)."""
+    P = plot_data(law, x, ref, est)
+    if P["discrete"]:
+        ks, counts, freq = P["ks"], P["counts"], P["freq"]
+        pr, pe = P["ref"], P["est"]
+        tiny = lambda c, i: (c[i] or 0) < 5e-5 if c else True
+        meaningful = [i for i in range(len(ks)) if counts[i] > 0 or not tiny(pr, i) or not tiny(pe, i)]
+        lo, hi = (meaningful[0], meaningful[-1]) if meaningful else (0, len(ks) - 1)   # sans les queues vides
+        P["rows"] = [[ks[i], counts[i], freq[i]] + ([pr[i]] if pr else []) + ([pe[i]] if pe else []) for i in range(lo, hi + 1)]
+        P["obs"] = freq
+    else:
+        a, bw, nb = P["a"], P["bw"], len(P["counts"])
+        centers = a + bw * (np.arange(nb) + 0.5)
+        dec = int(np.clip(3 - math.floor(math.log10(bw)), 0, 6))
+        with np.errstate(all="ignore"):
+            dr = law.frozen(ref).pdf(centers) if ref is not None else None
+            de = law.frozen(est).pdf(centers) if est is not None else None
+        P["rows"] = []
+        for i in range(nb):
+            close = "]" if i == nb - 1 else "["
+            P["rows"].append([f"[{fr(a + i * bw, dec)} ; {fr(a + (i + 1) * bw, dec)}{close}", round(float(centers[i]), dec + 1),
+                              int(P["counts"][i]), P["dens"][i]]
+                             + ([float(dr[i])] if dr is not None else []) + ([float(de[i])] if de is not None else []))
+    P["beyond"] = P["below"] + P["above"]
+    return P
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +118,7 @@ def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site
 
     ref = ref if _valid(law, ref) else None
     est = mom if sim and _valid(law, mom) else None            # « Loi estimée » du site (formule explicite)
-    dist = distribution(law, x, kind, ref, est)
+    dist = distribution(law, x, ref, est)
     # Mêmes noms que la légende du graphique sur le site
     obs_label = "Échantillon simulé" if sim else "Vos données"
     ref_label = "Loi théorique" if sim else "Loi ajustée (paramètres estimés)"
@@ -178,8 +130,9 @@ def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site
         head.append(f"{unit} estimée")
     note = ""
     if dist["beyond"]:
-        note = (f"{dist['beyond']} valeur{'s' if dist['beyond'] > 1 else ''} au-delà de F⁻¹(0,999) "
-                "compté" + ("es" if dist["beyond"] > 1 else "e") + " dans n mais hors du graphique, comme sur le site.")
+        b = dist["beyond"]
+        note = (f"{b} valeur{'s' if b > 1 else ''} extrême{'s' if b > 1 else ''} compté{'es' if b > 1 else 'e'} dans n "
+                "mais en dehors de la zone tracée, pour garder un graphique lisible.")
     return {
         "sim": sim, "law": law, "site": site.replace("https://", "").rstrip("/"),
         "title": "Rapport de simulation" if sim else "Rapport d’estimation",
@@ -395,14 +348,10 @@ def _chart(r: dict, width: float, height: float):
     if disc:
         ks = D["ks"]
         v0, v1 = ks[0] - 0.7, ks[-1] + 0.7
-        vals = D["obs"] + (D["ref"] or []) + (D["est"] or [])
     else:
         span = D["x1"] - D["x0"]
         v0, v1 = D["x0"] - 0.05 * span, D["x1"] + 0.05 * span      # 5 % de marge, comme sur le site
-        skip = int(len(D["grid"]) * 0.02)
-        curve = [v for c in (D["ref"], D["est"]) if c for v in c[skip:] if math.isfinite(v)]
-        vals = D["dens"] + curve
-    ymax = max(vals + [1e-9]) * 1.12
+    ymax = D["ymax"]                                               # hauteur calculée par alp/plot.py, comme sur le site
     yt = _ticks(0, ymax, 6, (1, 2, 5, 10))
     sx = lambda v: L + pw * (v - v0) / (v1 - v0)
     sy = lambda v: B + ph * min(v, ymax) / ymax
@@ -421,6 +370,8 @@ def _chart(r: dict, width: float, height: float):
         for vals_, col, dash in ((D["ref"], ink, None), (D["est"], est_c, [2.5, 2])):
             if vals_:
                 for k, p in zip(ks, vals_):
+                    if p is None or p <= 0:
+                        continue
                     d.add(Line(sx(k), B, sx(k), sy(p), strokeColor=col, strokeWidth=1.1, strokeDashArray=dash))
                     d.add(Circle(sx(k), sy(p), 1.9, fillColor=col, strokeColor=col))
         xt = list(range(int(math.ceil(v0)), int(math.floor(v1)) + 1, max(1, math.ceil(len(ks) / 25))))
@@ -430,9 +381,15 @@ def _chart(r: dict, width: float, height: float):
             if h > 0:
                 d.add(Rect(sx(a + i * bw), B, sx(a + (i + 1) * bw) - sx(a + i * bw), sy(h) - B, fillColor=light, strokeColor=edge, strokeWidth=0.4))
         for vals_, col, dash in ((D["ref"], ink, None), (D["est"], est_c, [3, 2])):
-            if vals_:
-                pts = [c for x, y in zip(D["grid"], vals_) if math.isfinite(y) for c in (sx(x), sy(y))]
-                d.add(PolyLine(pts, strokeColor=col, strokeWidth=1.2, strokeDashArray=dash))
+            if vals_:                                              # la courbe s'interrompt hors du cadre (densité infinie)
+                seg = []
+                for x, y in list(zip(D["grid"], vals_)) + [(None, None)]:
+                    if y is not None and y <= ymax:
+                        seg += [sx(x), sy(y)]
+                    else:
+                        if len(seg) >= 4:
+                            d.add(PolyLine(seg, strokeColor=col, strokeWidth=1.2, strokeDashArray=dash))
+                        seg = []
         xt = _ticks(v0, v1, 9)
     for t in xt:
         xx = sx(t)

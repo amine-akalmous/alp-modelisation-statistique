@@ -359,15 +359,37 @@ function curveOf(l,p,x0,x1){
   if(l.disc){const pts=[];for(let k=Math.ceil(x0);k<=Math.floor(x1);k++)pts.push([k,l.f(k,p)]);return pts}
   const N=200,pts=[];for(let i=0;i<N;i++){const x=x0+(x1-x0)*i/(N-1);pts.push([x,l.f(x,p)])}return pts;   // 200 points, comme Lib_Plot_densite.py
 }
-/* Lois à support positif : graphe sur [0, F⁻¹(0,999)] des paramètres tracés */
+/* Lois à support positif : dans Propriétés, graphe sur [0, F⁻¹(0,999)] (comme Lib_Plot_densite.py) */
 const POS=["exponentielle","gamma","weibull"];
+/* Simulation et Application : le graphique est calculé par le serveur (alp/plot.py), le même que
+   dans les exports PDF et Excel ; il s'adapte aux données, quelles qu'elles soient. */
+function fromPlot(m,P){
+  if(P.discrete){
+    m.x0=P.x0-.7;m.x1=P.x1+.7;m.v0=m.x0;m.v1=m.x1;
+    m.hist=P.ks.map((k,i)=>[k,P.freq[i]]).filter(h=>h[1]>0);
+    if(P.ref)m.main=P.ks.map((k,i)=>[k,P.ref[i]??NaN]);
+    if(P.est)m.estCurve=P.ks.map((k,i)=>[k,P.est[i]??NaN]);
+  }else{
+    const mg=(P.x1-P.x0)*.05;m.x0=P.x0;m.x1=P.x1;m.v0=P.x0-mg;m.v1=P.x1+mg;   // 5 % de marge, comme matplotlib
+    m.bw=P.bw;m.hist=P.dens.map((d,i)=>[P.a+i*P.bw,d??0]);
+    const pts=c=>P.grid.map((x,i)=>[x,c[i]??NaN]);                       // null = densité infinie : point non tracé
+    if(P.ref)m.main=pts(P.ref);
+    if(P.est)m.estCurve=pts(P.est);
+  }
+  m.ymax=P.ymax;
+}
 function buildModel(){
   const l=L(),m={main:[],hist:[],bw:1,estCurve:null,empty:null};
+  if(st.tab!=="props"){
+    if(st.tab==="sim"&&!st.sample)m.empty="Aucun échantillon : cliquez sur « Simuler ».";
+    if(st.tab==="data")m.empty=!st.data?"Saisissez ou importez des valeurs pour voir l'histogramme et la loi ajustée.":
+      !st.dres?"Cliquez sur « Lancer l'estimation » pour analyser vos données.":null;
+    const P=st.tab==="sim"?st.res&&st.res.plot:st.dres&&st.dres.plot;
+    if(!m.empty&&!P)m.empty="Calcul en cours…";
+    if(!m.empty&&P){fromPlot(m,P);m.par=st.tab==="sim"?st.simP:(fitOk(st.dres.moments)?st.dres.moments:null)}
+    st.model=m;return;
+  }
   let par=st.p,ext=[];
-  if(st.tab==="sim"){if(!st.sample){m.empty="Aucun échantillon : cliquez sur « Simuler »."}else{ext=st.sample;par=st.simP}}
-  if(st.tab==="data"){if(!st.data){m.empty="Saisissez ou importez des valeurs pour voir l'histogramme et la loi ajustée."}
-    else if(!st.dres){m.empty="Cliquez sur « Lancer l'estimation » pour analyser vos données."}
-    else{ext=st.data;const e=st.dres.moments;par=fitOk(e)?e:null}}
   m.par=par;
   let[x0,x1]=par?l.rg(par):[mn(ext),mx(ext)];
   const pos=POS.includes(l.slug)&&par;
