@@ -53,6 +53,14 @@ def check(slug, x, plot, correct_law=True):
             assert p["ref"] is not None, f"{slug}: loi non tracée"
             ref = np.array([np.nan if v is None else v for v in p["ref"]])
             assert np.mean(np.isfinite(ref) & (ref <= p["ymax"])) >= 0.6, f"{slug}: courbe hors du cadre"
+            # on voit la courbe retomber puis se stabiliser : sur les 8 % du bord droit (et du bord gauche,
+            # sauf si elle part de 0), la densité est presque nulle
+            if slug != "uniforme-continue":
+                top = np.nanmax(np.where(ref <= p["ymax"], ref, np.nan))
+                edge = max(1, int(0.08 * ref.size))
+                assert np.nanmax(ref[-edge:]) <= 0.02 * top, f"{slug}: pas de stabilisation visible à droite"
+                if p["x0"] > 0 or slug == "normale":
+                    assert np.nanmax(ref[:edge]) <= 0.02 * top, f"{slug}: pas de stabilisation visible à gauche"
 
 
 @pytest.mark.parametrize("slug", list(PARAMS))

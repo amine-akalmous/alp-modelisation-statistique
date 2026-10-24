@@ -65,12 +65,21 @@ def _law_window(law: Law, p) -> tuple[float, float]:
     if law.slug == "uniforme-continue":                         # support [a, b] et un peu d'espace autour
         w = p[1] - p[0]
         return p[0] - 0.25 * w, p[1] + 0.25 * w
-    if law.slug == "normale":
-        s = math.sqrt(p[1])
-        return p[0] - 4 * s, p[0] + 4 * s
     lo, hi = float(d.ppf(Q)), float(d.ppf(1 - Q))
-    if law.slug in POS and lo < 0.15 * hi:                     # la masse commence près de 0 : on part de 0
-        lo = 0.0
+    # On prolonge jusqu'à ce que la densité soit retombée (< 0,2 % de son maximum) de chaque côté,
+    # puis nettement au-delà : on voit le début de la montée, le pic et une vraie zone de stabilisation.
+    with np.errstate(all="ignore"):
+        g = np.linspace(float(d.ppf(1e-6)), float(d.ppf(1 - 1e-6)), 4000)
+        f = d.pdf(g)
+        core = (g >= d.ppf(0.01)) & (g <= d.ppf(0.99)) & np.isfinite(f)   # maximum hors d'une éventuelle densité infinie en 0
+    if core.any():
+        visible = np.flatnonzero(np.isfinite(f) & (f >= 0.002 * f[core].max()))
+        if visible.size:
+            lo, hi = min(lo, float(g[visible[0]])), max(hi, float(g[visible[-1]]))
+    pad = 0.12 * (hi - lo)                                      # ≈ 10 % de la largeur où la courbe est à plat, de chaque côté
+    lo, hi = lo - pad, hi + pad
+    if law.slug in POS:                                         # support [0, +∞[ : jamais en dessous de 0,
+        lo = 0.0 if lo < 0.15 * hi else lo                      # et on part de 0 si la masse commence près de 0
     return lo, hi
 
 
@@ -135,7 +144,7 @@ def plot_data(law: Law, x: np.ndarray, ref=None, est=None) -> dict:
             wlo, whi = _law_window(law, p)
             # la loi ajustée peut être faussée (valeurs aberrantes, loi mal choisie) : elle ne peut pas
             # étirer la fenêtre bien au-delà des données
-            x0, x1 = min(x0, max(wlo, dlo - 0.5 * span)), max(x1, min(whi, dhi + 0.5 * span))
+            x0, x1 = min(x0, max(wlo, dlo - 0.6 * span)), max(x1, min(whi, dhi + 0.6 * span))
     if law.slug in POS and 0 <= x0 < 0.15 * x1:
         x0 = 0.0
     if not x1 > x0:                                              # données constantes

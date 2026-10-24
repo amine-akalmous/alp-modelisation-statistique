@@ -105,7 +105,10 @@ def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site
 
     gp = g.get("params") if g.get("applicable") else None
     est_head = ["Paramètre"] + (["Valeur vraie"] if sim else []) + ["Formule explicite", "Montée de gradient"]
-    est_rows = [[p] + ([truth[i]] if sim else []) + [mom[i] if i < len(mom) else None, gp[i] if gp else None]
+    entier = law.slug in ("binomiale", "uniforme-discrete")          # n, a, b : des entiers, affichés sans décimales
+    as_int_p = lambda i, v: int(round(v)) if v is not None and entier and (law.slug != "binomiale" or i == 0) \
+        and float(v).is_integer() else v
+    est_rows = [[p] + ([truth[i]] if sim else []) + [as_int_p(i, mom[i] if i < len(mom) else None), as_int_p(i, gp[i] if gp else None)]
                 for i, p in enumerate(pnames)]
     if g.get("applicable"):
         conv = (f"convergence en {g['iterations']} itération{'s' if g['iterations'] > 1 else ''}" if g["converged"]
@@ -332,14 +335,18 @@ def _dec(t: list[float]) -> int:
     return d
 
 
-def _chart(r: dict, width: float, height: float):
+def _chart(r: dict, width: float, height: float, site_colours: bool = False):
     """Même graphique que sur le site : distribution empirique en barres grises,
-    loi théorique (ou ajustée) en trait plein, loi estimée en pointillés."""
+    loi théorique (ou ajustée) en trait plein, loi estimée en pointillés.
+    site_colours : loi en bleu et loi estimée en noir, comme sur le site (sinon gris et noir, pour le rapport)."""
     from reportlab.graphics.shapes import Circle, Drawing, Line, PolyLine, Rect, String
     from reportlab.lib import colors
 
     ink, gray, light, edge = (colors.HexColor(c) for c in ("#1A1A1A", "#555555", "#D9D9D9", "#8C8C8C"))
     est_c = colors.HexColor("#6E6E6E")
+    law_c = ink
+    if site_colours:
+        light, edge, law_c, est_c = (colors.HexColor(c) for c in ("#E4E7EE", "#8A93A6", "#2F5BFF", "#0A0F1E"))
     D, disc = r["dist"], r["law"].discrete
     d = Drawing(width, height)
     L, R, T, B = 40, 8, 6, 44
@@ -367,7 +374,7 @@ def _chart(r: dict, width: float, height: float):
         for k, f in zip(ks, D["obs"]):
             if f > 0:
                 d.add(Rect(sx(k - 0.35), B, sx(k + 0.35) - sx(k - 0.35), sy(f) - B, fillColor=light, strokeColor=edge, strokeWidth=0.5))
-        for vals_, col, dash in ((D["ref"], ink, None), (D["est"], est_c, [2.5, 2])):
+        for vals_, col, dash in ((D["ref"], law_c, None), (D["est"], est_c, [2.5, 2])):
             if vals_:
                 for k, p in zip(ks, vals_):
                     if p is None or p <= 0:
@@ -380,7 +387,7 @@ def _chart(r: dict, width: float, height: float):
         for i, h in enumerate(D["dens"]):
             if h > 0:
                 d.add(Rect(sx(a + i * bw), B, sx(a + (i + 1) * bw) - sx(a + i * bw), sy(h) - B, fillColor=light, strokeColor=edge, strokeWidth=0.4))
-        for vals_, col, dash in ((D["ref"], ink, None), (D["est"], est_c, [3, 2])):
+        for vals_, col, dash in ((D["ref"], law_c, None), (D["est"], est_c, [3, 2])):
             if vals_:                                              # la courbe s'interrompt hors du cadre (densité infinie)
                 seg = []
                 for x, y in list(zip(D["grid"], vals_)) + [(None, None)]:
@@ -405,7 +412,7 @@ def _chart(r: dict, width: float, height: float):
         if kind == "box":
             d.add(Rect(x, ly, 10, 7, fillColor=light, strokeColor=edge, strokeWidth=0.5))
         else:
-            d.add(Line(x, ly + 3.5, x + 14, ly + 3.5, strokeColor=ink if kind == "ref" else est_c, strokeWidth=1.2,
+            d.add(Line(x, ly + 3.5, x + 14, ly + 3.5, strokeColor=law_c if kind == "ref" else est_c, strokeWidth=1.2,
                        strokeDashArray=None if kind == "ref" else [3, 2]))
         d.add(String(x + 18, ly + 1, label, fontName="DejaVu", fontSize=8, fillColor=ink))
         x += 30 + 4.6 * len(label)
