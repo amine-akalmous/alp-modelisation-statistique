@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% include "_meta.html" %}
+<link rel="icon" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('site.js') }}"></script>
+</head>
+<body>
+{% include "_header.html" %}
+<main class="wrap" style="padding:110px 0 40px;text-align:center">
+  <span class="label">Error 404</span>
+  <h1 style="margin:16px 0 18px">This page <span class="grad">does not exist.</span></h1>
+  <p class="lead" style="margin:0 auto">The link may be incorrect, or the page may have been moved.</p>
+  <div class="actions" style="justify-content:center"><a class="btn primary" href="/en/">Back to the home page</a><a class="btn ghost" href="/en/#lois">See the distributions</a></div>
+</main>
+{% include "_footer.html" %}
+</body>
+</html>

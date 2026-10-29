@@ -1,7 +1,17 @@
+{% set en = lang == 'en' %}
 <header><div class="wrap bar">
-  <a class="brand" href="/"><span class="logo-mark"></span><b>ALP</b><small>Modélisation<br>statistique</small></a>
+  <a class="brand" href="{{ '/en/' if en else '/' }}"><span class="logo-mark"></span><b>ALP</b><small>{% if en %}Statistical<br>modeling{% else %}Modélisation<br>statistique{% endif %}</small></a>
   <div class="bar-r">
+    {% if en %}
+    <nav class="main"><a href="/en/"{% if page == "accueil" %} class="on" aria-current="page"{% endif %}>Home</a><a href="/en/guide"{% if page == "guide" %} class="on" aria-current="page"{% endif %}>Guide</a><a href="/en/#lois"{% if page == "lois" %} class="on" aria-current="page"{% endif %}>Distributions</a><a href="/en/about"{% if page == "a-propos" %} class="on" aria-current="page"{% endif %}>About</a></nav>
+    {% else %}
     <nav class="main"><a href="/"{% if page == "accueil" %} class="on" aria-current="page"{% endif %}>Accueil</a><a href="/guide"{% if page == "guide" %} class="on" aria-current="page"{% endif %}>Guide</a><a href="/#lois"{% if page == "lois" %} class="on" aria-current="page"{% endif %}>Les lois</a><a href="/a-propos"{% if page == "a-propos" %} class="on" aria-current="page"{% endif %}>À propos</a></nav>
+    {% endif %}
+    <!-- Sélecteur de langue : renvoie vers la même page dans l'autre langue (le mode ouvert d'une loi est conservé) -->
+    <div class="lang" role="group" aria-label="{{ 'Language' if en else 'Langue' }}">
+      <a href="{{ alt_url if en else request.path }}" hreflang="fr" lang="fr"{% if not en %} class="on" aria-current="true"{% endif %} data-lang="fr">FR</a>
+      <a href="{{ request.path if en else alt_url }}" hreflang="en" lang="en"{% if en %} class="on" aria-current="true"{% endif %} data-lang="en">EN</a>
+    </div>
     <div class="hlogos"><img src="/static/img/cnam.png" alt="Le Cnam" width="103" height="30"><img src="/static/img/edf.png" alt="EDF" width="70" height="30"></div>
   </div>
 </div></header>

@@ -104,6 +104,11 @@ nav.main a.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(10,15,3
 .hlogos{display:flex;align-items:center;gap:20px;padding-left:24px;border-left:1px solid var(--line);height:36px}
 .hlogos img{height:30px;width:auto}
 @media (max-width:900px){.hlogos{display:none}}
+/* Sélecteur de langue FR | EN */
+.lang{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
+.lang a{font:600 12px/1 var(--mono);letter-spacing:.04em;color:var(--muted);padding:7px 9px;border-radius:7px;transition:.2s}
+.lang a:hover{color:var(--ink)}
+.lang a.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(10,15,30,.12)}
 
 /* ---------- Fond animé (aurore + grille) ---------- */
 .stage{position:relative;isolation:isolate}
@@ -281,6 +286,7 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .tabs3 button.on b{background:rgba(255,255,255,.22);color:#fff}
 .tabs3 button.on small{color:rgba(255,255,255,.85)}
 .view{margin-top:28px;display:flex;flex-direction:column;gap:34px}
+#simres,#datares{display:flex;flex-direction:column;gap:44px}   /* résultats : statistiques, estimation… bien séparés */
 .view.anim .dsec{animation:rise .5s both}
 .view.anim .dsec:nth-child(2){animation-delay:.08s}.view.anim .dsec:nth-child(3){animation-delay:.16s}
 .work2{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
@@ -315,7 +321,11 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .kpi .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .ta{min-height:130px;resize:vertical;font-size:13.5px;line-height:1.5;font-weight:400}
 .hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:8px}
-.hint a{color:var(--a1-d);font-weight:500}
+/* Définition des moments et des moments centrés, sous le tableau des statistiques descriptives */
+.moments{margin-top:20px;padding:20px 24px;border:1px solid var(--line);border-radius:16px;background:var(--soft)}
+.moments p{font-size:14.5px;color:var(--ink-2);line-height:1.6}
+.moments .mrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 56px;margin-top:16px;font-size:20px;color:var(--ink)}
+.moments .mrow .et{color:var(--muted);font-size:15px}   /* seulement le mot « et » : les formules gardent leur taille et leur couleur */.hint a{color:var(--a1-d);font-weight:500}
 .row{display:flex;gap:8px;margin-top:10px}
 .row .btn{flex:1}
 .evalrow{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line-2);padding:9px 0 0;margin-top:10px;font-size:13.5px;color:var(--ink-2)}
@@ -337,7 +347,7 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .doc.anim .dsec{animation:rise .5s both}
 .doc.anim .dsec:nth-child(2){animation-delay:.08s}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.dsec h4{display:flex;align-items:baseline;gap:12px;font-size:24px;margin-bottom:12px}
+.dsec h4{display:flex;align-items:baseline;gap:12px;font-size:24px;margin-bottom:16px}
 .dsec h4 b{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--a1-d);letter-spacing:.08em}
 .dsec h4 small{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:0;color:var(--muted);margin-left:auto}
 .def{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
@@ -350,7 +360,7 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .def .v{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--a1-d);text-align:right;min-width:74px}
 .def .v.est{color:var(--ink)}
 .def .pl div{font-size:14px;color:var(--ink-2);line-height:1.7}
-.conv{margin-top:14px;padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:center}
+.conv{margin-top:20px;padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:center}
 .conv p{font-size:14.5px;color:var(--ink-2);margin-top:8px}
 .conv canvas{display:block;width:100%;height:150px}
 @media (max-width:1100px){.conv{grid-template-columns:1fr}
@@ -564,6 +574,7 @@ footer a:hover{color:var(--ink)}
   .brand{gap:6px}.brand b{font-size:19px}
   nav.main{gap:2px;padding:3px}
   nav.main a{padding:7px 6px;font-size:13px}
+  .bar-r{gap:6px}.lang{padding:2px}.lang a{padding:7px 6px}.lang a.on{display:none}   /* téléphone : seul le lien vers l'autre langue reste */
   .lawgrid,.steps,.journey,.schools,.keys,.specs,.phases{grid-template-columns:1fr}
   .post{padding:24px 20px}
   .specs .wide{grid-column:auto}
@@ -578,10 +589,14 @@ footer a:hover{color:var(--ink)}
   .cta{padding:34px 24px}
   .school{grid-template-columns:1fr}
   .gal img{height:200px}
+  .me>*{min-width:0}.brief{padding:20px}.brief .row3{gap:8px}.brief .row3 div{padding:12px 10px}.brief .row3 b{font-size:24px}
   .themer span{display:none}
 }
-@media (max-width:359px){   /* très petits téléphones : seul le logo reste à gauche du menu */
+@media (max-width:430px){   /* téléphones : seul le logo reste à gauche du menu et du sélecteur de langue */
   .brand b{display:none}
+  nav.main a{padding:7px 5px}
+}
+@media (max-width:359px){   /* très petits téléphones */
   nav.main a{padding:6px 5px;font-size:12px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}.kt .ln>span,.uline::after{transform:none}}

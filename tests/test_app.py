@@ -28,7 +28,7 @@ def test_referencement(client):
     r = client.get("/robots.txt")
     assert r.status_code == 200 and "Sitemap: https://alpstat.pythonanywhere.com/sitemap.xml" in r.get_data(as_text=True)
     xml = client.get("/sitemap.xml").get_data(as_text=True)
-    assert xml.count("<url>") == 3 + len(LAWS) and "/loi/normale" in xml
+    assert xml.count("<url>") == 2 * (3 + len(LAWS)) and "/loi/normale" in xml and "/en/law/normal" in xml
     html = client.get("/a-propos").get_data(as_text=True)
     assert "<title>Amine Akalmous" in html and 'rel="canonical" href="https://alpstat.pythonanywhere.com/a-propos"' in html
     assert '"name":"Amine Akalmous"' in html and "og:image" in html
@@ -38,6 +38,62 @@ def test_referencement(client):
 def test_page_inconnue(client):
     assert client.get("/loi/inconnue").status_code == 404
     assert client.get("/nimporte-quoi").status_code == 404
+
+
+# ---------------------------------------------------------------- version anglaise
+EN_PAGES = {"/": "/en/", "/guide": "/en/guide", "/a-propos": "/en/about", "/loi/normale": "/en/law/normal",
+            "/loi/uniforme-discrete": "/en/law/discrete-uniform", "/loi/geometrique": "/en/law/geometric"}
+
+
+@pytest.mark.parametrize("fr_url,en_url", list(EN_PAGES.items()))
+def test_pages_anglaises(client, fr_url, en_url):
+    """Chaque page existe en anglais, et le sélecteur FR | EN relie les deux versions."""
+    en = client.get(en_url)
+    assert en.status_code == 200
+    html = en.get_data(as_text=True)
+    assert '<html lang="en">' in html and "Amine Akalmous" in html
+    assert f'href="{fr_url}" hreflang="fr"' in html and f'hreflang="fr" href="https://alpstat.pythonanywhere.com{fr_url}"' in html
+    fr = client.get(fr_url).get_data(as_text=True)
+    assert '<html lang="fr">' in fr and f'href="{en_url}" hreflang="en"' in fr
+
+
+def test_pages_anglaises_toutes_les_lois(client):
+    from alp.i18n import SLUG_EN
+    for s in LAWS:
+        assert client.get(f"/en/law/{SLUG_EN[s]}").status_code == 200
+    assert client.get("/en/law/normale").status_code == 404          # adresse française sous /en/ : introuvable
+    r = client.get("/en/nothing-here")
+    assert r.status_code == 404 and "This page" in r.get_data(as_text=True)
+
+
+def test_api_en_anglais(client):
+    """Avec l'en-tête X-ALP-Lang: en, les messages du serveur sont en anglais."""
+    h = {"X-ALP-Lang": "en"}
+    r = client.post("/api/simulate", json={"law": "normale", "params": [0, -1], "n": 100}, headers=h)
+    assert r.status_code == 400 and r.get_json()["error"] == "σ² must be strictly positive."
+    j = client.post("/api/estimate", json={"law": "uniforme-continue", "data": [1, 2, 3]}, headers=h).get_json()
+    assert j["gradient"]["reason"].startswith("The likelihood depends")
+    j = client.post("/api/estimate", json={"law": "binomiale", "data": [3, 4, 5, 2, 6, 4]}, headers=h).get_json()
+    assert not j["gradient"].get("note") or j["gradient"]["note"].startswith("n is fixed")
+
+
+def test_api_export_anglais(client):
+    """Export demandé depuis la version anglaise : fichiers en anglais, nombres avec un point décimal."""
+    import io
+    from openpyxl import load_workbook
+    sim = client.post("/api/simulate", json={"law": "normale", "params": [0, 1], "n": 300, "seed": 1}).get_json()
+    body = {"law": "normale", "kind": "sim", "data": sim["sample"], "params": [0, 1], "seed": 1}
+    h = {"X-ALP-Lang": "en"}
+    xls = client.post("/api/export", json={**body, "format": "xlsx"}, headers=h)
+    assert xls.status_code == 200 and "ALP_normal_simulation_" in xls.headers["Content-Disposition"]
+    wb = load_workbook(io.BytesIO(xls.data))
+    assert wb.sheetnames == ["Report", "Sample"]
+    cells = [c for row in wb["Report"].iter_rows(values_only=True) for c in row if isinstance(c, str)]
+    assert "Simulation report" in cells and "Empirical mean" in cells and "Descriptive statistics" in " ".join(cells)
+    assert any(c.startswith("[") and ", " in c and c.endswith(")") for c in cells)   # classes notées [a, b)
+    assert not any("Moyenne" in c or "Paramètre" in c for c in cells)
+    pdf = client.post("/api/export", json={**body, "format": "pdf"}, headers=h)
+    assert pdf.status_code == 200 and pdf.data[:4] == b"%PDF"
 
 
 @pytest.mark.parametrize("slug", list(TRUE))

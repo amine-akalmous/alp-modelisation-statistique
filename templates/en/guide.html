@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% include "_meta.html" %}
+<link rel="icon" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('site.js') }}"></script>
+</head>
+<body>
+
+{% include "_header.html" %}
+
+<main>
+  <div class="stage">
+    <div class="aurora"><span></span><span></span><span></span></div>
+    <div class="gridbg"></div>
+    <div class="wrap">
+      <div class="ghero">
+        <span class="tag reveal"><i></i>The guide · 5 steps · 10 minutes</span>
+        <h1 class="reveal d1">Before simulating,<br><span class="grad">understand.</span></h1>
+        <p class="lead reveal d2">A probability distribution is a model. It is only useful if you know what the variable represents, what you expect from the model and which assumptions you accept by using it.</p>
+      </div>
+      <div class="gmap reveal d3">
+        <a href="#choisir"><b>01</b>Identify your variable</a><a href="#lire"><b>02</b>Read the quantities</a><a href="#simulation"><b>03</b>Understand simulation</a>
+        <a href="#donnees"><b>04</b>Import your data</a><a href="#interpreter"><b>05</b>Interpret with care</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap guide">
+    <nav class="stepper" id="stepper" aria-label="Progress through the guide">
+      <i class="fill" id="fill"></i>
+      <a href="#choisir"><b>01</b>Identify</a>
+      <a href="#lire"><b>02</b>Read</a>
+      <a href="#simulation"><b>03</b>Simulate</a>
+      <a href="#donnees"><b>04</b>Import</a>
+      <a href="#interpreter"><b>05</b>Interpret</a>
+    </nav>
+
+    <div>
+      <section class="card gsec reveal" id="choisir">
+        <span class="label">01 · Start from the phenomenon</span>
+        <h2>What does your variable represent?</h2>
+        <p>Does your variable <strong>count</strong> something (successes, events, trials), or does it <strong>measure</strong> a quantity that can take any value in an interval (a duration, a voltage, a pressure)? In the first case the distribution is discrete; in the second, it is continuous.</p>
+        <table class="qtable"><thead><tr><th>Your situation</th><th>A distribution to explore</th></tr></thead><tbody id="choose"></tbody></table>
+        <p class="small">Suggestions, not an automatic choice: on a small sample, several distributions can produce very similar histograms.</p>
+      </section>
+
+      <section class="card gsec reveal" id="lire">
+        <span class="label">02 · Understand the quantities</span>
+        <h2>Mean, dispersion, probability</h2>
+        <div class="keys">
+          <div><b>Mean <span class="tx" data-t="E[X]"></span></b><span>The average obtained by repeating the experiment a very large number of times (expected value).</span></div>
+          <div><b>Variance <span class="tx" data-t="\mathrm{Var}(X)"></span></b><span>The dispersion around the mean, expressed in squared units.</span></div>
+          <div><b>Standard deviation <span class="tx" data-t="\sigma"></span></b><span>The square root of the variance: same unit as the measurements.</span></div>
+        </div>
+        <p>For a <strong>discrete</strong> distribution, the height of a bar is a probability <span class="tx" data-t="P(X=k)"></span>. For a <strong>continuous</strong> distribution, the height is a density: the probability of an interval is the <strong>area</strong> under the curve, and a density can exceed 1. Try it:</p>
+        <div class="demo">
+          <div class="dh"><b>Area under the curve · normal distribution with mean 0</b><div class="ctl">a <input id="da" value="-1" inputmode="decimal"> b <input id="db" value="1" inputmode="decimal"> σ² <input id="ds" value="1" inputmode="decimal"></div></div>
+          <canvas id="demoArea"></canvas>
+          <div class="ctl" style="justify-content:space-between;margin-top:6px"><span><span class="tx" data-t="P(a\le X\le b)"></span> = <span class="res" id="dP"></span></span><span>maximum height of the density = <span class="res" id="dM"></span></span></div>
+        </div>
+        <p>The <strong>cumulative distribution function</strong> <span class="tx" data-t="F(x)=P(X\le x)"></span> increases from 0 to 1. The 95 % <strong>quantile</strong> is the value below which at least 95 % of the probability lies.</p>
+      </section>
+
+      <section class="card gsec reveal" id="simulation">
+        <span class="label">03 · Experiment</span>
+        <h2>Know the model, observe a sample</h2>
+        <p>The Simulation tab draws pseudo-random values with your parameters, then re-estimates them from the sample. The gap between “true” and “estimated” changes with every draw and narrows as n increases, at the rate <span class="tx" data-t="1/\sqrt{n}"></span>. See for yourself:</p>
+        <div class="demo">
+          <div class="dh"><b>60 estimates of μ, each from a sample of size n</b><div class="ctl"><button class="btn sm ghost" data-n="10">n = 10</button><button class="btn sm ghost" data-n="100">n = 100</button><button class="btn sm ghost" data-n="1000">n = 1000</button></div></div>
+          <canvas id="demoSpread"></canvas>
+          <div class="ctl" style="margin-top:6px">Spread of the estimates: <span class="res" id="dS"></span><span class="muted" id="dS2"></span></div>
+        </div>
+        <p>The <strong>seed</strong> field makes a draw reproducible: the same seed with the same parameters gives the same sample, which is handy when preparing a teaching example.</p>
+        <div class="callout"><b>More draws are not more measurements.</b><p>Generating 10,000 values from a distribution fitted on 20 observations creates no experimental information. The uncertainty on the estimated parameters is not carried over into the simulation.</p></div>
+      </section>
+
+      <section class="card gsec reveal" id="donnees">
+        <span class="label">04 · Keep the file meaningful</span>
+        <h2>One column, one variable</h2>
+        <p>In the Application tab, type or paste your values, or open a <strong>.txt</strong> or <strong>.csv</strong> file. A list can be separated by line breaks, spaces or semicolons; both the decimal point and the decimal comma are accepted.</p>
+        <p>For a <strong>table</strong> (columns separated by semicolons or tabs), a menu lets you choose the column to analyze; the header row is detected automatically.</p>
+        <div class="code">time;deviation_Pa
+0;0.12
+1;0.15
+2;0.11</div>
+        <p>Here, choose “deviation_Pa”. In a comma-separated CSV, write decimals with a point. Non-numeric cells are ignored and their number is reported: nothing is removed silently.</p>
+        <p class="small">Your values are sent to the server only to perform the calculation; they are neither recorded nor stored.</p>
+      </section>
+
+      <section class="card gsec reveal" id="interpreter">
+        <span class="label">05 · Interpret</span>
+        <h2>A fit is a starting point</h2>
+        <div class="keys">
+          <div><b>Within the chosen family</b><span>The estimated parameters are the best ones for this distribution; they do not prove that it is the right distribution.</span></div>
+          <div><b>Look before concluding</b><span>Compare the histogram with the curve, try another distribution, look at the skewness and the kurtosis.</span></div>
+          <div><b>Independence</b><span>The methods assume independent and identically distributed observations.</span></div>
+        </div>
+        <p>Before fitting, examine the acquisition conditions: sensor drift, a change of settings, outliers, systematic effects. The method of moments is sensitive to extreme values, especially on small samples. Finally, fitting a distribution is not an evaluation of measurement uncertainty in the metrological sense.</p>
+        <div class="actions"><a class="btn primary" href="/en/#lois">Go to the distributions →</a></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+{% include "_footer.html" %}
+
+<script src="{{ asset('lois.js') }}"></script>
+{% include "_guide_js.html" %}
+</body>
+</html>

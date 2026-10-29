@@ -1,6 +1,16 @@
 /* ALP — données et calculs des dix lois (partagé par toutes les pages) */
 const $=s=>document.querySelector(s);
-const fmt=(x,d=4)=>Number.isFinite(x)?x.toLocaleString("fr-FR",{maximumFractionDigits:d}):"—";
+/* Langue de la page (attribut lang de <html>) : français par défaut, anglais sous /en/ */
+const LANG=document.documentElement.lang==="en"?"en":"fr";
+const LOC=LANG==="en"?"en-US":"fr-FR";
+const fmt=(x,d=4)=>Number.isFinite(x)?x.toLocaleString(LOC,{maximumFractionDigits:d}):"—";
+/* Adresse d'une loi dans la langue de la page */
+const SLUG_EN={"bernoulli":"bernoulli","binomiale":"binomial","poisson":"poisson","geometrique":"geometric","uniforme-discrete":"discrete-uniform",
+  "uniforme-continue":"continuous-uniform","exponentielle":"exponential","normale":"normal","gamma":"gamma","weibull":"weibull"};
+const lawUrl=s=>LANG==="en"?`/en/law/${SLUG_EN[s]}`:`/loi/${s}`;
+const home=LANG==="en"?"/en/":"/",guideUrl=LANG==="en"?"/en/guide":"/guide";
+/* Traduction des textes de l'interface : tx("texte français") renvoie la version anglaise sur les pages /en/ */
+const tx=s=>LANG==="en"&&I18N_EN[s]!==undefined?I18N_EN[s]:s;
 /* Générateur pseudo-aléatoire : Math.random, ou mulberry32 si une graine est fixée */
 const RNG={u:Math.random};
 function setSeed(seed){
@@ -229,7 +239,108 @@ const CHOOSE=[
  ["Vous mesurez une durée d'attente sans mémoire.",["exponentielle"],"Attente sans mémoire"],
  ["Vous étudiez des durées ou des grandeurs positives et asymétriques.",["gamma","weibull"],"Durées positives"],
 ];
-const chooseRows=()=>CHOOSE.map(([q,ls])=>`<tr><td>${q}</td><td>${ls.map(s=>`<a class="lnk" href="/loi/${s}">${LAWS[bySlug(s)].name}</a>`).join(" ou ")}</td></tr>`).join("");
+const chooseRows=()=>CHOOSE.map(([q,ls])=>`<tr><td>${q}</td><td>${ls.map(s=>`<a class="lnk" href="${lawUrl(s)}">${LAWS[bySlug(s)].name}</a>`).join(tx(" ou "))}</td></tr>`).join("");
 
 /* Lecture d'un nombre tapé (virgule ou point) */
 const num=s=>{s=String(s).trim().replace(/\s/g,"").replace(",",".");return s===""?NaN:Number(s)};
+
+/* ====== Version anglaise (pages /en/) ======
+   Terminologie scientifique standard : probability mass function, cumulative distribution function,
+   method of moments, gradient ascent, empirical mean, central moments… */
+var I18N_EN={
+ " ou ":" or ",
+ /* messages de validation (identiques à ceux du serveur) */
+ "θ doit être strictement compris entre 0 et 1.":"θ must lie strictly between 0 and 1.",
+ "n doit être un entier compris entre 1 et 1000.":"n must be an integer between 1 and 1000.",
+ "p doit être strictement compris entre 0 et 1.":"p must lie strictly between 0 and 1.",
+ "λ doit être strictement positif et au plus 500.":"λ must be strictly positive and at most 500.",
+ "a et b doivent être des entiers.":"a and b must be integers.",
+ "Il faut a < b.":"a must be less than b.",
+ "L'écart b − a doit rester inférieur à 1000.":"The gap b − a must be less than 1000.",
+ "λ doit être strictement positif.":"λ must be strictly positive.",
+ "σ² doit être strictement positif.":"σ² must be strictly positive.",
+ "a et b doivent être strictement positifs.":"a and b must be strictly positive.",
+ "a doit être compris entre 0,3 et 100.":"a must lie between 0.3 and 100.",
+ "b doit être strictement positif.":"b must be strictly positive.",
+ /* page d'une loi */
+ "Le serveur n'a pas pu faire le calcul. Réessayez.":"The server could not run the calculation. Please try again.",
+ "Loi discrète":"Discrete distribution","Loi continue":"Continuous distribution",
+ "Comment lire ces grandeurs ?":"How to read these quantities?",
+ "Saisissez un nombre valide (par exemple 2,5).":"Enter a valid number (for example 2.5).",
+ "Valeur trop grande (maximum 1 000 000 en valeur absolue).":"Value too large (at most 1,000,000 in absolute value).",
+ "Définition":"Definition","Espérance":"Mean","Variance":"Variance",
+ "Moments pour des paramètres donnés":"Moments for given parameters",
+ "Paramètres":"Parameters","tapez vos valeurs":"type your values",
+ "Fonction de masse":"Probability mass function","Densité de probabilité":"Probability density function",
+ "E[X] · ESPÉRANCE":"E[X] · MEAN","Var(X) · VARIANCE":"Var(X) · VARIANCE","σ · ÉCART-TYPE":"σ · STANDARD DEVIATION",
+ "Grandeur":"Quantity","Relation":"Relation","Valeur":"Value","Écart-type":"Standard deviation",
+ "Échantillon":"Sample","taille de l'échantillon, 2 à 100 000":"sample size, 2 to 100,000",
+ "graine":"seed","aucune":"none","facultatif : la même graine redonne le même échantillon":"optional: the same seed gives the same sample",
+ "Simuler":"Simulate","Distribution empirique":"Empirical distribution",
+ "Paramètres modifiés : cliquez sur « Simuler » pour tirer un nouvel échantillon.":"Parameters changed: click “Simulate” to draw a new sample.",
+ "Aucun échantillon pour l'instant. Choisissez les paramètres et la taille n, puis cliquez sur « Simuler ».":"No sample yet. Choose the parameters and the size n, then click “Simulate”.",
+ "n doit être un entier compris entre 2 et 100 000.":"n must be an integer between 2 and 100,000.",
+ "La graine doit être un entier positif (ou laissée vide).":"The seed must be a non-negative integer (or left empty).",
+ "Calcul en cours…":"Computing…","Simulation réussie":"Simulation complete","Échec de la simulation":"Simulation failed",
+ "Vos données":"Your data","Valeurs":"Values",
+ "Tapez ou collez vos valeurs ici…&#10;une par ligne, ou séparées par des espaces ou des points-virgules":"Type or paste your values here…&#10;one per line, or separated by spaces or semicolons",
+ "Ouvrir un fichier":"Open a file","Exemple":"Example","Lancer l'estimation":"Run the estimation",
+ "Virgule ou point pour les décimales ; fichier .txt ou .csv, à ouvrir ou à déposer ici.":"Decimal point or comma; a .txt or .csv file, to open or drop here.",
+ "Formats acceptés":"Accepted formats","Vos données et loi ajustée":"Your data and fitted distribution",
+ "Estimation réussie":"Estimation complete","Échec de l'estimation":"Estimation failed",
+ "Il faut au moins 2 valeurs.":"At least 2 values are required.",
+ "Cette loi est discrète : les valeurs devraient être entières.":"This distribution is discrete: the values should be integers.",
+ "Cette loi n'est définie que pour des valeurs positives.":"This distribution is defined only for non-negative values.",
+ "Colonne à analyser":"Column to analyze","Analyser : ":"Analyze: ","Colonne ":"Column ",
+ "Télécharger les résultats":"Download the results","Rapport PDF":"PDF report","Classeur Excel":"Excel workbook",
+ "Préparation du fichier…":"Preparing the file…","Le fichier n'a pas pu être créé. Réessayez.":"The file could not be created. Please try again.",
+ "Fichier téléchargé":"File downloaded","Échec du téléchargement":"Download failed",
+ "Statistiques descriptives":"Descriptive statistics","Statistique":"Statistic","Formule":"Formula",
+ "On obtient les résultats du tableau ci-dessus en utilisant les fonctions des moments et des moments centrés définies par :":
+   "The results in the table above are obtained using the moment functions and the central moment functions defined by:",
+ "et":"and",
+ "Estimation des paramètres":"Parameter estimation","Paramètre":"Parameter","Formule explicite":"Closed-form estimator",
+ "Vrai":"True","Gradient":"Gradient","Montée de gradient":"Gradient ascent","Départ":"Starting point",
+ "Log-vraisemblance moyenne finale":"Final mean log-likelihood",
+ "Convergence de la log-vraisemblance au fil des itérations":"Convergence of the log-likelihood over the iterations",
+ "itération":"iteration","(échelle log.)":"(log scale)",
+ "Aucun échantillon : cliquez sur « Simuler ».":"No sample: click “Simulate”.",
+ "Saisissez ou importez des valeurs pour voir l'histogramme et la loi ajustée.":"Enter or import values to see the histogram and the fitted distribution.",
+ "Cliquez sur « Lancer l'estimation » pour analyser vos données.":"Click “Run the estimation” to analyze your data.",
+ "Loi théorique":"Theoretical distribution","Échantillon simulé":"Simulated sample","Loi estimée":"Estimated distribution",
+ "Loi ajustée (paramètres estimés)":"Fitted distribution (estimated parameters)",
+ /* accueil et guide */
+ "discrète":"discrete","continue":"continuous","paramètres : ":"parameters: ","Toutes les lois":"All distributions",
+ "Sélectionnez votre situation pour voir la loi à explorer, ou ouvrez directement une loi.":"Select your situation to see which distribution to explore, or open a distribution directly.",
+ " Une piste, pas une sélection automatique.":" A suggestion, not an automatic choice.",
+ "théorie :":"theory:","vrai μ = 0":"true μ = 0",
+};
+if(LANG==="en"){
+  const NAMES=["Bernoulli","Binomial","Poisson","Geometric","Discrete uniform","Continuous uniform","Exponential","Normal","Gamma","Weibull"];
+  const PD={"entier, 1 ≤ n ≤ 1000":"integer, 1 ≤ n ≤ 1000","entier":"integer","entier, a < b ≤ a + 1000":"integer, a < b ≤ a + 1000","réel":"real",
+    "réel, a < b":"real, a < b","a > 0 (forme)":"a > 0 (shape)","b > 0 (taux)":"b > 0 (rate)","0,3 ≤ a ≤ 100 (forme)":"0.3 ≤ a ≤ 100 (shape)","b > 0 (échelle)":"b > 0 (scale)"};
+  LAWS.forEach((L,i)=>{L.name=NAMES[i];L.P.forEach(q=>{q.d=PD[q.d]??q.d});const c=L.check;L.check=p=>{const m=c(p);return m?tx(m):m}});
+  const DESC=[
+   "The Bernoulli distribution describes a single trial with two possible outcomes. It takes the value 1 with probability θ and the value 0 otherwise.",
+   "The binomial distribution counts the number of successes in n independent Bernoulli trials, all with the same probability of success p.",
+   "The Poisson distribution models the number of rare events occurring in a fixed interval, when they occur independently of one another at a mean rate λ.",
+   "The geometric distribution gives the number of trials needed to obtain the first success in a sequence of independent Bernoulli trials with probability of success p.",
+   "The discrete uniform distribution assigns the same probability to every integer between a and b. It is the model of a fair die.",
+   "The continuous uniform distribution spreads probability evenly over the interval [a, b]: all subintervals of equal length are equally likely.",
+   "The exponential distribution describes the waiting time before an event in a memoryless process with rate λ.",
+   "The normal distribution spreads its mass symmetrically around a center μ, with a width set by the variance σ². It is the limiting distribution of normalized sums of independent observations, hence its central role in measurement.",
+   "The gamma distribution generalizes the exponential distribution. It models positive, skewed quantities such as durations or accumulated amounts; a is the shape parameter and b the rate.",
+   "The Weibull distribution is the classical model for lifetimes and reliability. Its shape parameter a governs how the failure rate evolves; b is the scale parameter."];
+  const ROW={"Fonction de masse":"Probability mass function","Support":"Support","Densité":"Probability density function",
+    "Fonction de répartition":"Cumulative distribution function","Fonction de répartition inverse":"Quantile function (inverse CDF)"};
+  const TEX=s=>s.replace(/\\text\{sinon\}/g,"\\text{otherwise}").replace(/\\operatorname\{arrondi\}/g,"\\operatorname{round}")
+    .replace("§Pas de forme explicite ; elle est obtenue numériquement.","§No closed form; it is computed numerically.");
+  DOC.forEach((d,i)=>{d.desc=DESC[i];d.rows=d.rows.map(([k,f])=>[ROW[k]??k,TEX(f)]);d.ef=d.ef.map(TEX)});
+  ["Observations","Minimum","Maximum","Empirical mean","Empirical variance","Skewness","Kurtosis"].forEach((s,i)=>{STATS[i][0]=s});
+  const CH=[["A trial has two outcomes: success or failure.","Two outcomes"],["You count successes over n independent trials.","Counting successes"],
+    ["You count events over a fixed time span or area.","Counting events"],["You wait for a first success, counted in number of trials.","Waiting for a success"],
+    ["All integer values in an interval are equally likely.","Equally likely integers"],["All values in a real interval are equally likely.","Equally likely interval"],
+    ["You observe symmetric deviations around a central value.","Symmetric deviations"],["You measure a memoryless waiting time.","Memoryless waiting"],
+    ["You study durations or positive, skewed quantities.","Positive durations"]];
+  CHOOSE.forEach((c,i)=>{c[0]=CH[i][0];c[2]=CH[i][1]});
+}

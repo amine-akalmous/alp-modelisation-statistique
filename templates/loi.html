@@ -1,5 +1,6 @@
+{% set en = lang == 'en' %}
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -31,13 +32,19 @@
 
   <!-- Barre collante : 1) choisir la loi (pastilles), 2) choisir le mode (trois grands onglets) -->
   <div class="lawbar" id="lawbar">
-    <div class="wrap"><nav class="switch" id="switch" aria-label="Changer de loi"></nav></div>
+    <div class="wrap"><nav class="switch" id="switch" aria-label="{{ 'Change distribution' if en else 'Changer de loi' }}"></nav></div>
     <div class="wrap lb">
       <div class="lbname" hidden><b id="lbName"></b><span id="lbNt"></span></div>
       <div class="tabs3" id="tabs" role="tablist">
+        {% if en %}
+        <button data-t="props" class="on" role="tab"><b>01</b><span>Properties<small>formulas and moments</small></span></button>
+        <button data-t="sim" role="tab"><b>02</b><span>Simulation<small>draw a sample</small></span></button>
+        <button data-t="data" role="tab"><b>03</b><span>Application<small>your own data</small></span></button>
+        {% else %}
         <button data-t="props" class="on" role="tab"><b>01</b><span>Propriétés<small>formules et moments</small></span></button>
         <button data-t="sim" role="tab"><b>02</b><span>Simulation<small>tirer un échantillon</small></span></button>
         <button data-t="data" role="tab"><b>03</b><span>Application<small>vos propres données</small></span></button>
+        {% endif %}
       </div>
     </div>
   </div>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% include "_meta.html" %}
+<link rel="icon" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('site.js') }}"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--a1)"/><stop offset="1" style="stop-color:var(--a1)"/></linearGradient></defs></svg>
+
+{% include "_header.html" %}
+
+<main>
+  <div class="stage">
+    <div class="aurora"><span></span><span></span><span></span></div>
+    <div class="gridbg"></div>
+    <section class="wrap hero">
+      <div class="h-text">
+        <span class="tag reveal"><i></i>Workshop on common probability distributions</span>
+        <h1 class="reveal d1"><span class="ln">Applying a distribution through</span> <span class="ln"><span class="grad">visualization</span>, <span class="grad">simulation</span></span> <span class="ln">and <span class="grad">estimation</span></span></h1>
+        <p class="lead reveal d2">I am an engineering apprentice in electronic systems, tele&shy;communications and computer science at the engineering school of the Conser&shy;vatoire national des arts et métiers <b>(CNAM)</b>. As part of my studies, I work at the research and develop&shy;ment laboratory <b>EDF R&amp;D (Chatou)</b>.</p>
+        <div class="pres reveal d2">
+          <span class="label">About this work</span>
+          <p>This work was carried out under the supervision of <b>Dariush GHORBANZADEH (CNAM)</b>. Its aim is to represent, simulate and apply common probability distri&shy;butions to experimental data. Ten probability distri&shy;butions were selected.</p>
+          <p>The theoretical properties of each distri&shy;bution are presented in this work. A human–machine interface then makes it possible to simulate (reproduce) the desired distri&shy;bution from its para&shy;meters, which gives an idea of its behavior as its para&shy;meters vary. Para&shy;meter estimation is a key step in the appli&shy;cation part: we used the method of moments together with the gradient method.</p>
+          <p>For the appli&shy;cation, the interface lets you select an external file. The files should be plain text with a single column. As an illus&shy;tration, a collection of data sets can be downloaded <a class="dl" href="/static/data/Donnees_Test_ALP.zip" download>here</a>.</p>
+        </div>
+      </div>
+      <!-- Right column: animated chart, then the buttons and the profile, visible on arrival -->
+      <div class="h-side">
+        <div class="card viz reveal d2">
+          <div class="vh"><div><b id="vName">Normal</b><br><span id="vNt"></span></div><div class="dots" id="vDots"></div></div>
+          <canvas id="viz" aria-label="The ten distributions in turn: a density curve for a continuous distribution, sticks for a discrete one"></canvas>
+          <div class="vf"><div><small>E[X]</small><strong id="vE">0</strong></div><div><small>Var(X)</small><strong id="vV">1</strong></div><div><small>Type</small><strong id="vT">continuous</strong></div></div>
+        </div>
+        <div class="actions reveal d3"><a class="btn primary" href="#lois">Get started</a><a class="btn ghost" href="/en/guide">Understand the distributions</a></div>
+        <a class="author reveal d4" href="/en/about"><img src="/static/img/photo.jpg" alt=""><span>Designed and developed by <b>Amine Akalmous</b><small>View the author's background</small></span><i>→</i></a>
+      </div>
+    </section>
+  </div>
+
+  <section class="wrap blk" id="avant">
+    <div class="bhead"><div><span class="label">Step 1</span><h2 class="big">Before you start</h2></div><p>Four notions to keep in mind before simulating or importing data. Each one is covered in detail in the guide.</p></div>
+    <div class="steps">
+      <div class="card glow step reveal"><span class="n">01</span><h3>Identify your variable</h3><p>Does it count events, or does it measure a continuous quantity? This is what points to a discrete or a continuous distribution.</p><a class="lnk" href="/en/guide#choisir">Choose a distribution →</a></div>
+      <div class="card glow step reveal d1"><span class="n">02</span><h3>Read the quantities</h3><p>Mean, variance, density: what each displayed value means, and what it does not tell you.</p><a class="lnk" href="/en/guide#lire">Read the results →</a></div>
+      <div class="card glow step reveal d2"><span class="n">03</span><h3>Understand simulation</h3><p>Why the estimates change with every draw, and why they tighten as n increases.</p><a class="lnk" href="/en/guide#simulation">Simulate →</a></div>
+      <div class="card glow step reveal d3"><span class="n">04</span><h3>Import and interpret</h3><p>The right file format, then the precautions to take before concluding that a distribution describes your measurements.</p><a class="lnk" href="/en/guide#donnees">Your data →</a></div>
+    </div>
+  </section>
+
+  <section class="wrap blk" id="lois">
+    <div class="bhead"><div><span class="label">Step 2</span><h2 class="big">Choose a distribution</h2></div><p id="chooseText">Select your situation to see which distribution to explore, or open a distribution directly.</p></div>
+    <div class="filters" id="filters"></div>
+    <div class="grp">Discrete distributions</div>
+    <div class="lawgrid" id="gDisc"></div>
+    <div class="grp">Continuous distributions</div>
+    <div class="lawgrid" id="gCont"></div>
+
+    <div class="card maker reveal">
+      <div class="avatar"><img src="/static/img/photo.jpg" alt="Amine Akalmous" width="112" height="112"></div>
+      <div>
+        <span class="label">Behind ALP</span>
+        <h3>A tool designed by an R&amp;D engineering apprentice</h3>
+        <p>ALP was designed and developed by <b>Amine Akalmous</b>, engineering student at CNAM and R&amp;D engineering apprentice at EDF R&amp;D, under the supervision of Dariush GHORBANZADEH (CNAM).</p>
+        <div class="mlogos"><img src="/static/img/edf.png" alt="EDF"><img src="/static/img/cnam.png" alt="Le Cnam"></div>
+      </div>
+      <a class="btn ghost" href="/en/about">About the author →</a>
+    </div>
+
+    <div class="cta reveal">
+      <div><h2>New to probability distributions?</h2><p>The guide covers the key notions, with two interactive demonstrations.</p></div>
+      <div class="actions" style="margin:0"><a class="btn primary" href="/en/guide">Read the guide</a><a class="btn ghost" href="/en/about">The author</a></div>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+
+<script src="{{ asset('lois.js') }}"></script>
+{% include "_accueil_js.html" %}
+</body>
+</html>

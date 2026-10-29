@@ -4,25 +4,58 @@ Les deux fichiers ont le même contenu, construit une seule fois par build_repor
 paramètres, statistiques descriptives, estimation des paramètres, tableau de distribution
 (effectifs observés et probabilités de la loi) et un graphique tiré de ce tableau.
 Présentation volontairement sobre : tableaux à filets (PDF), tableaux et graphique natifs (Excel).
+Les fichiers sont en français, ou en anglais quand l'export est demandé depuis la version anglaise du site.
 """
 from __future__ import annotations
 
 import io
 import math
+from contextvars import ContextVar
 from datetime import date
 from pathlib import Path
 
 import numpy as np
 
+from .i18n import NAME_EN, tr
 from .laws import Law, analyse
 from .plot import plot_data, valid
 
+# Langue du fichier en cours de fabrication (fr ou en) : fixée par build_report, to_xlsx et to_pdf
+_LG: ContextVar[str] = ContextVar("alp_export_lang", default="fr")
+
+
+def _en() -> bool:
+    return _LG.get() == "en"
+
+
+# Textes fixes des deux fichiers → anglais
+_EN = {
+    "Rapport": "Report", "Généré le": "Generated on", "Élément": "Item", "Valeur": "Value", "Statistique": "Statistic",
+    "1. Paramètres": "1. Parameters", "2. Statistiques descriptives": "2. Descriptive statistics",
+    "3. Estimation des paramètres": "3. Parameter estimation", "Loi estimée": "Estimated distribution",
+    "Fréquence / probabilité": "Frequency / probability", "Densité": "Density", "Valeur k": "Value k",
+    "x (centre de classe)": "x (class center)", "ALP — Modélisation statistique": "ALP — Statistical modeling",
+    "Figure 1 — Distribution empirique (fréquences) et loi en P(X = k).":
+        "Figure 1 — Empirical distribution (relative frequencies) and probability mass function P(X = k).",
+    "Figure 1 — Histogramme en densité et densité de la loi, comme sur le site.":
+        "Figure 1 — Density histogram and probability density function of the distribution, as on the site.",
+}
+
+
+def _t(s: str) -> str:
+    return _EN.get(s, s) if _en() else s
+
+
+def _law_name(law: Law) -> str:
+    return NAME_EN[law.slug] if _en() else law.name
+
 
 # ---------------------------------------------------------------------------
-# Mise en forme des nombres (à la française)
+# Mise en forme des nombres (à la française, ou à l'anglaise pour un export en anglais)
 # ---------------------------------------------------------------------------
 def fr(v, d: int = 4) -> str:
-    """Nombre en notation française : virgule décimale, espace fine pour les milliers, vrai signe moins."""
+    """Nombre en notation française : virgule décimale, espace fine pour les milliers, vrai signe moins.
+    En anglais : point décimal et virgule pour les milliers."""
     if v is None or (isinstance(v, float) and not math.isfinite(v)):
         return "—"
     if isinstance(v, str):
@@ -33,16 +66,31 @@ def fr(v, d: int = 4) -> str:
         s = f"{float(v):.{3 - math.floor(math.log10(abs(v)))}f}".rstrip("0").rstrip(".")
     else:
         s = f"{float(v):,.{d}f}"
+    if _en():
+        return s.replace("-", "−")
     return s.replace(",", " ").replace(".", ",").replace("-", "−")
 
 
 def fr_short(v) -> str:
     """Paramètre tel qu'il a été saisi : sans zéros inutiles (0,3 et non 0,3000)."""
-    s = fr(float(v), 6)
-    return s.rstrip("0").rstrip(",") if "," in s else s
+    s, sep = fr(float(v), 6), "." if _en() else ","
+    return s.rstrip("0").rstrip(sep) if sep in s else s
 
 
 _valid = valid
+
+# Sous le tableau des statistiques descriptives : définition des moments m_r et des moments centrés μ_r
+# (texte de D. Ghorbanzadeh)
+MOMENTS_INTRO = ("On obtient les résultats du tableau ci-dessus en utilisant les fonctions des moments "
+                 "et des moments centrés définies par : ")
+MOMENTS_TXT = MOMENTS_INTRO + "mᵣ = (1/n) Σ xᵢʳ  et  μᵣ = (1/n) Σ (xᵢ − m₁)ʳ, la somme portant sur i = 1, …, n."
+MOMENTS_PDF = (MOMENTS_INTRO + "m<sub>r</sub> = (1/n) Σ<sub>i=1..n</sub> x<sub>i</sub><super>r</super>"
+               "  et  μ<sub>r</sub> = (1/n) Σ<sub>i=1..n</sub> (x<sub>i</sub> − m<sub>1</sub>)<super>r</super>.")
+MOMENTS_INTRO_EN = ("The results in the table above are obtained using the moment functions "
+                    "and the central moment functions defined by: ")
+MOMENTS_TXT_EN = MOMENTS_INTRO_EN + "mᵣ = (1/n) Σ xᵢʳ  and  μᵣ = (1/n) Σ (xᵢ − m₁)ʳ, where the sum runs over i = 1, …, n."
+MOMENTS_PDF_EN = (MOMENTS_INTRO_EN + "m<sub>r</sub> = (1/n) Σ<sub>i=1..n</sub> x<sub>i</sub><super>r</super>"
+                  "  and  μ<sub>r</sub> = (1/n) Σ<sub>i=1..n</sub> (x<sub>i</sub> − m<sub>1</sub>)<super>r</super>.")
 
 
 # ---------------------------------------------------------------------------
@@ -69,8 +117,12 @@ def distribution(law: Law, x: np.ndarray, ref, est) -> dict:
             de = law.frozen(est).pdf(centers) if est is not None else None
         P["rows"] = []
         for i in range(nb):
-            close = "]" if i == nb - 1 else "["
-            P["rows"].append([f"[{fr(a + i * bw, dec)} ; {fr(a + (i + 1) * bw, dec)}{close}", round(float(centers[i]), dec + 1),
+            lo_, hi_ = fr(a + i * bw, dec), fr(a + (i + 1) * bw, dec)
+            if _en():                                                # notation anglaise : [a, b) ; dernière classe [a, b]
+                cls = f"[{lo_}, {hi_}{']' if i == nb - 1 else ')'}"
+            else:                                                    # notation française : [a ; b[ ; dernière classe [a ; b]
+                cls = f"[{lo_} ; {hi_}{']' if i == nb - 1 else '['}"
+            P["rows"].append([cls, round(float(centers[i]), dec + 1),
                               int(P["counts"][i]), P["dens"][i]]
                              + ([float(dr[i])] if dr is not None else []) + ([float(de[i])] if de is not None else []))
     P["beyond"] = P["below"] + P["above"]
@@ -80,49 +132,100 @@ def distribution(law: Law, x: np.ndarray, ref, est) -> dict:
 # ---------------------------------------------------------------------------
 # Contenu commun aux deux formats
 # ---------------------------------------------------------------------------
-def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site: str = "") -> dict:
+def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site: str = "", lang: str = "fr") -> dict:
+    """Contenu du rapport, dans la langue demandée (fr ou en)."""
+    tok = _LG.set("en" if lang == "en" else "fr")
+    try:
+        r = _build(law, x, kind, truth, seed, site)
+    finally:
+        _LG.reset(tok)
+    r["lang"] = "en" if lang == "en" else "fr"
+    return r
+
+
+def _build(law: Law, x: np.ndarray, kind: str, truth, seed, site: str) -> dict:
+    en = _en()
+    name = _law_name(law)
     res = analyse(law, x)
     st, mom, g = res["stats"], res["moments"], res["gradient"]
     sim = kind == "sim"
     pnames = law.params
+    join = "; " if en else " ; "
     if sim:
-        info = [("Loi", law.name),
-                ("Paramètres", " ; ".join(f"{p} = {fr_short(v)}" for p, v in zip(pnames, truth))),
-                ("Taille de l'échantillon n", st["n"]),
-                ("Graine", "aucune (tirage aléatoire)" if seed is None else seed)]
+        info = ([("Distribution", name),
+                 ("Parameters", join.join(f"{p} = {fr_short(v)}" for p, v in zip(pnames, truth))),
+                 ("Sample size n", st["n"]),
+                 ("Seed", "none (random draw)" if seed is None else seed)] if en else
+                [("Loi", name),
+                 ("Paramètres", join.join(f"{p} = {fr_short(v)}" for p, v in zip(pnames, truth))),
+                 ("Taille de l'échantillon n", st["n"]),
+                 ("Graine", "aucune (tirage aléatoire)" if seed is None else seed)])
         ref = truth
     else:
         ref = mom if _valid(law, mom) else None                  # loi ajustée du site : formule explicite
-        info = [("Loi ajustée", law.name), ("Nombre de valeurs n", st["n"]), ("Origine des données", "fichier ou saisie de l'utilisateur")]
+        info = ([("Fitted distribution", name), ("Number of values n", st["n"]), ("Data source", "user file or input")] if en else
+                [("Loi ajustée", name), ("Nombre de valeurs n", st["n"]), ("Origine des données", "fichier ou saisie de l'utilisateur")])
         if ref is not None:
-            info.append(("Paramètres retenus", " ; ".join(f"{p} = {fr(v)}" for p, v in zip(pnames, ref))))
+            info.append(("Selected parameters" if en else "Paramètres retenus", join.join(f"{p} = {fr(int(v)) if float(v).is_integer() else fr(v)}" for p, v in zip(pnames, ref))))
 
     as_int = law.discrete and all(v is not None and float(v).is_integer() for v in (st["min"], st["max"]))
     lo, hi = (int(st["min"]), int(st["max"])) if as_int else (st["min"], st["max"])   # loi discrète : bornes entières
-    stats_rows = [("Observations n", st["n"]), ("Minimum", lo), ("Maximum", hi),
-                  ("Moyenne empirique", st["mean"]), ("Variance empirique", st["var"]),
-                  ("Asymétrie", st["skew"]), ("Kurtosis", st["kurt"])]
+    labels = (("Observations n", "Minimum", "Maximum", "Empirical mean", "Empirical variance", "Skewness", "Kurtosis") if en else
+              ("Observations n", "Minimum", "Maximum", "Moyenne empirique", "Variance empirique", "Asymétrie", "Kurtosis"))
+    stats_rows = list(zip(labels, (st["n"], lo, hi, st["mean"], st["var"], st["skew"], st["kurt"])))
 
     gp = g.get("params") if g.get("applicable") else None
-    est_head = ["Paramètre"] + (["Valeur vraie"] if sim else []) + ["Formule explicite", "Montée de gradient"]
+    est_head = (["Parameter"] + (["True value"] if sim else []) + ["Closed-form estimator", "Gradient ascent"] if en else
+                ["Paramètre"] + (["Valeur vraie"] if sim else []) + ["Formule explicite", "Montée de gradient"])
     entier = law.slug in ("binomiale", "uniforme-discrete")          # n, a, b : des entiers, affichés sans décimales
     as_int_p = lambda i, v: int(round(v)) if v is not None and entier and (law.slug != "binomiale" or i == 0) \
         and float(v).is_integer() else v
     est_rows = [[p] + ([truth[i]] if sim else []) + [as_int_p(i, mom[i] if i < len(mom) else None), as_int_p(i, gp[i] if gp else None)]
                 for i, p in enumerate(pnames)]
+    lg = "en" if en else "fr"
     if g.get("applicable"):
-        conv = (f"convergence en {g['iterations']} itération{'s' if g['iterations'] > 1 else ''}" if g["converged"]
-                else f"arrêt après {g['iterations']} itérations")
-        grad_text = f"Montée de gradient : {conv} ; log-vraisemblance moyenne finale : {fr(g['loglik'])}."
+        it = g["iterations"]
+        if en:
+            conv = f"converged in {it} iteration{'s' if it > 1 else ''}" if g["converged"] else f"stopped after {it} iterations"
+            grad_text = f"Gradient ascent: {conv}; final mean log-likelihood: {fr(g['loglik'])}."
+        else:
+            conv = f"convergence en {it} itération{'s' if it > 1 else ''}" if g["converged"] else f"arrêt après {it} itérations"
+            grad_text = f"Montée de gradient : {conv} ; log-vraisemblance moyenne finale : {fr(g['loglik'])}."
         if g.get("note"):
-            grad_text += " " + g["note"]
+            grad_text += " " + tr(g["note"], lg)
     else:
-        grad_text = "Montée de gradient : " + g["reason"][0].lower() + g["reason"][1:]
+        reason = tr(g["reason"], lg)
+        grad_text = ("Gradient ascent: " if en else "Montée de gradient : ") + reason[0].lower() + reason[1:]
 
     ref = ref if _valid(law, ref) else None
     est = mom if sim and _valid(law, mom) else None            # « Loi estimée » du site (formule explicite)
     dist = distribution(law, x, ref, est)
     # Mêmes noms que la légende du graphique sur le site
+    note = ""
+    b = dist["beyond"]
+    if en:
+        obs_label = "Simulated sample" if sim else "Your data"
+        ref_label = "Theoretical distribution" if sim else "Fitted distribution (estimated parameters)"
+        unit = "P(X = k)" if law.discrete else "density"
+        head = (["Value k", "Count", "Observed frequency"] if law.discrete else ["Class", "Center", "Count", "Observed density"])
+        if ref is not None:
+            head.append(f"{'Theoretical' if sim else 'Fitted'} {unit}")
+        if est is not None:
+            head.append(f"Estimated {unit}")
+        if b:
+            note = f"{b} extreme value{'s' if b > 1 else ''} counted in n but outside the plotted range, to keep the chart readable."
+        d = date.today()
+        return {
+            "sim": sim, "law": law, "site": site.replace("https://", "").rstrip("/"),
+            "title": "Simulation report" if sim else "Estimation report",
+            "law_line": f"{name} distribution · ALP — Statistical modeling",
+            "date": f"{d:%B} {d.day}, {d.year}",
+            "info": info, "stats": stats_rows, "est_head": est_head, "est": est_rows, "grad_text": grad_text,
+            "dist": dist, "dist_head": head, "dist_note": note,
+            "obs_label": obs_label, "ref_label": ref_label, "est_label": "Estimated distribution",
+            "dist_title": "Empirical distribution and " + ("theoretical" if sim else "fitted") + " distribution",
+            "sample": x, "sheet": "Sample" if sim else "Data",
+        }
     obs_label = "Échantillon simulé" if sim else "Vos données"
     ref_label = "Loi théorique" if sim else "Loi ajustée (paramètres estimés)"
     unit = "P(X = k)" if law.discrete else "Densité"
@@ -131,15 +234,13 @@ def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site
         head.append(f"{unit} {'théorique' if sim else 'ajustée'}")
     if est is not None:
         head.append(f"{unit} estimée")
-    note = ""
-    if dist["beyond"]:
-        b = dist["beyond"]
+    if b:
         note = (f"{b} valeur{'s' if b > 1 else ''} extrême{'s' if b > 1 else ''} compté{'es' if b > 1 else 'e'} dans n "
                 "mais en dehors de la zone tracée, pour garder un graphique lisible.")
     return {
         "sim": sim, "law": law, "site": site.replace("https://", "").rstrip("/"),
         "title": "Rapport de simulation" if sim else "Rapport d’estimation",
-        "law_line": f"Loi {law.name} · ALP — Modélisation statistique",
+        "law_line": f"Loi {name} · ALP — Modélisation statistique",
         "date": date.today().strftime("%d/%m/%Y"),
         "info": info, "stats": stats_rows, "est_head": est_head, "est": est_rows, "grad_text": grad_text,
         "dist": dist, "dist_head": head, "dist_note": note,
@@ -152,6 +253,19 @@ def build_report(law: Law, x: np.ndarray, kind: str, truth=None, seed=None, site
 # ---------------------------------------------------------------------------
 # Excel : tableaux et graphique natifs, style par défaut d'Excel
 # ---------------------------------------------------------------------------
+def _in_lang(fn):
+    """Fabrique le fichier dans la langue du rapport (nombres et textes fixes)."""
+    def wrapped(r: dict) -> bytes:
+        tok = _LG.set(r.get("lang", "fr"))
+        try:
+            return fn(r)
+        finally:
+            _LG.reset(tok)
+    wrapped.__name__, wrapped.__doc__ = fn.__name__, fn.__doc__
+    return wrapped
+
+
+@_in_lang
 def to_xlsx(r: dict) -> bytes:
     from openpyxl import Workbook
     from openpyxl.chart import BarChart, LineChart, Reference
@@ -164,7 +278,7 @@ def to_xlsx(r: dict) -> bytes:
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Rapport"
+    ws.title = _t("Rapport")
     ws.sheet_view.showGridLines = False
     ws.sheet_format.defaultRowHeight = 18
     for c, w in zip("ABCDEFGH", (3, 30, 26, 18, 20, 20, 20, 3)):  # A : marge ; tableaux de B à G ; graphique en I
@@ -210,16 +324,18 @@ def to_xlsx(r: dict) -> bytes:
     ws["B1"].font = Font(bold=True, size=16)
     ws["B2"] = r["law_line"]
     ws["B2"].font = Font(size=11, color="595959")
-    ws["B3"] = f"Généré le {r['date']} · {r['site']}"
+    ws["B3"] = f"{_t('Généré le')} {r['date']} · {r['site']}"
     ws["B3"].font = Font(size=10, color="808080")
 
-    row = section(5, "1. Paramètres")
-    row = table(row, ["Élément", "Valeur"], r["info"], ["@", "0"])   # n reste un nombre (pas de « nombre stocké en texte »)
+    row = section(5, _t("1. Paramètres"))
+    row = table(row, [_t("Élément"), _t("Valeur")], r["info"], ["@", "0"])   # n reste un nombre (pas de « nombre stocké en texte »)
 
-    row = section(row, "2. Statistiques descriptives")
-    row = table(row, ["Statistique", "Valeur"], r["stats"], ["@", "0.0000"])
+    row = section(row, _t("2. Statistiques descriptives"))
+    row = table(row, [_t("Statistique"), _t("Valeur")], r["stats"], ["@", "0.0000"])
+    ws.cell(row - 1, 2, MOMENTS_TXT_EN if _en() else MOMENTS_TXT).font = gray   # définition des moments, sous les statistiques
+    row += 1
 
-    row = section(row, "3. Estimation des paramètres")
+    row = section(row, _t("3. Estimation des paramètres"))
     fmts = ["@"] + (["General"] if r["sim"] else []) + ["0.0000", "0.0000"]
     row = table(row, r["est_head"], r["est"], fmts)
     ws.cell(row - 1, 2, r["grad_text"]).font = gray
@@ -273,8 +389,8 @@ def to_xlsx(r: dict) -> bytes:
                 s.graphicalProperties.line.dashStyle = "dash"
         bar += ln
         j += 1
-    bar.y_axis.title = "Fréquence / probabilité" if disc else "Densité"
-    bar.x_axis.title = "Valeur k" if disc else "x (centre de classe)"
+    bar.y_axis.title = _t("Fréquence / probabilité" if disc else "Densité")
+    bar.x_axis.title = _t("Valeur k" if disc else "x (centre de classe)")
     bar.y_axis.number_format = "0.00"
     bar.x_axis.delete = bar.y_axis.delete = False
     n_cat = len(d["rows"])
@@ -404,7 +520,7 @@ def _chart(r: dict, width: float, height: float, site_colours: bool = False):
         d.add(String(xx, B - 12, fr(t, 0 if disc else _dec(xt)), fontName="DejaVu", fontSize=7.5, fillColor=gray, textAnchor="middle"))
     d.add(Line(L, B, L + pw, B, strokeColor=ink, strokeWidth=0.7))
     d.add(Line(L, B, L, B + ph, strokeColor=ink, strokeWidth=0.7))
-    d.add(String(L + pw / 2, B - 25, "Valeur k" if disc else "x", fontName="DejaVu", fontSize=8, fillColor=gray, textAnchor="middle"))
+    d.add(String(L + pw / 2, B - 25, _t("Valeur k") if disc else "x", fontName="DejaVu", fontSize=8, fillColor=gray, textAnchor="middle"))
 
     x, ly = L, 4                                                    # légende, dans l'ordre du site
     items = [("box", r["obs_label"])] + ([("ref", r["ref_label"])] if D["ref"] else []) + ([("est", r["est_label"])] if D["est"] else [])
@@ -419,6 +535,7 @@ def _chart(r: dict, width: float, height: float, site_colours: bool = False):
     return d
 
 
+@_in_lang
 def to_pdf(r: dict) -> bytes:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
@@ -438,7 +555,8 @@ def to_pdf(r: dict) -> bytes:
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=22 * mm, rightMargin=22 * mm, topMargin=20 * mm, bottomMargin=20 * mm,
-                            title=f"{r['title']} — loi {r['law'].name}", author="ALP — Modélisation statistique")
+                            title=r["title"] + (f" — {_law_name(r['law'])} distribution" if _en() else f" — loi {r['law'].name}"),
+                            author=_t("ALP — Modélisation statistique"))
     W = doc.width
 
     def table(head, rows, widths, num_cols=()):
@@ -460,31 +578,33 @@ def to_pdf(r: dict) -> bytes:
         canvas.saveState()
         canvas.setFont("DejaVu", 8)
         canvas.setFillColor(gray)
-        canvas.drawString(doc_.leftMargin, 11 * mm, f"ALP — Modélisation statistique · {r['site']}")
+        canvas.drawString(doc_.leftMargin, 11 * mm, f"{_t('ALP — Modélisation statistique')} · {r['site']}")
         canvas.drawRightString(A4[0] - doc_.rightMargin, 11 * mm, f"Page {doc_.page}")
         canvas.restoreState()
 
     rule = Table([[""]], colWidths=[W], rowHeights=[0.1])
     rule.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 1, ink)]))
     story = [Paragraph(r["title"], s_title), Paragraph(r["law_line"], s_sub),
-             Paragraph(f"Généré le {r['date']}", s_sub), Spacer(1, 8), rule]
+             Paragraph(f"{_t('Généré le')} {r['date']}", s_sub), Spacer(1, 8), rule]
 
     # Sections 1 et 2 côte à côte : la page 1 garde la place pour le graphique
-    left = [Paragraph("1. Paramètres", s_h), table(None, r["info"], [W * 0.29, W * 0.25])]
-    right = [Paragraph("2. Statistiques descriptives", s_h), table(["Statistique", "Valeur"], r["stats"], [W * 0.25, W * 0.15], num_cols=(1,))]
+    left = [Paragraph(_t("1. Paramètres"), s_h), table(None, r["info"], [W * 0.29, W * 0.25])]
+    right = [Paragraph(_t("2. Statistiques descriptives"), s_h),
+             table([_t("Statistique"), _t("Valeur")], r["stats"], [W * 0.25, W * 0.15], num_cols=(1,))]
     duo = Table([[left, right]], colWidths=[W * 0.58, W * 0.42], hAlign="LEFT")
     duo.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0),
                              ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
     story.append(duo)
+    story.append(Paragraph(MOMENTS_PDF_EN if _en() else MOMENTS_PDF, s_body))   # définition des moments, sous les statistiques
     n_est = len(r["est_head"])
     est = [[row[0]] + ([fr_short(row[1])] if r["sim"] else []) + row[2 if r["sim"] else 1:] for row in r["est"]]   # valeur vraie telle que saisie
-    story += [Paragraph("3. Estimation des paramètres", s_h),
+    story += [Paragraph(_t("3. Estimation des paramètres"), s_h),
               table(r["est_head"], est, [W * 0.22] + [W * 0.26] * (n_est - 1), num_cols=tuple(range(1, n_est))),
               Paragraph(r["grad_text"], s_body)]
 
     fig = _chart(r, W, 70 * mm)
-    caption = ("Figure 1 — Distribution empirique (fréquences) et loi en P(X = k)." if r["law"].discrete
-               else "Figure 1 — Histogramme en densité et densité de la loi, comme sur le site.")
+    caption = _t("Figure 1 — Distribution empirique (fréquences) et loi en P(X = k)." if r["law"].discrete
+                 else "Figure 1 — Histogramme en densité et densité de la loi, comme sur le site.")
     story.append(KeepTogether([Paragraph("4. " + r["dist_title"], s_h), fig, Paragraph(caption, s_cap)]
                               + ([Paragraph(r["dist_note"], s_cap)] if r["dist_note"] else [])))
     head, rows = r["dist_head"], r["dist"]["rows"]
@@ -492,7 +612,11 @@ def to_pdf(r: dict) -> bytes:
     rest = (W - sum(widths)) / max(1, len(head) - len(widths))
     widths = (widths + [rest] * (len(head) - len(widths)))[:len(head)]
     story += [Spacer(1, 12), table(head, rows, widths, num_cols=tuple(range(1, len(head))))]
-    story.append(Paragraph(("Toutes les valeurs de l’échantillon" if r["sim"] else "Toutes vos données")
-                           + " figurent dans l’export Excel (feuille « " + r["sheet"] + " »).", s_body))
+    if _en():
+        story.append(Paragraph(("All the sample values" if r["sim"] else "All your data")
+                               + " are included in the Excel export (sheet “" + r["sheet"] + "”).", s_body))
+    else:
+        story.append(Paragraph(("Toutes les valeurs de l’échantillon" if r["sim"] else "Toutes vos données")
+                               + " figurent dans l’export Excel (feuille « " + r["sheet"] + " »).", s_body))
     doc.build(story, onFirstPage=footer, onLaterPages=footer)
     return buf.getvalue()
