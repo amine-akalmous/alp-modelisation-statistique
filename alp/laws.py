@@ -193,9 +193,8 @@ def _exponentielle() -> Law:
 
 def _normale() -> Law:
     def transforms(x):
-        q75, q25 = np.percentile(x, [75, 25])
-        scale = float(q75 - q25) / 1.349 or float(x.std()) or 1.0
-        return [AFFINE(float(np.median(x)), scale), LOG]
+        # μ exprimé en écarts-types : la courbure reste la même quelles que soient l'unité et les valeurs aberrantes
+        return [AFFINE(float(np.median(x)), float(x.std()) or 1.0), LOG]
 
     def loglik(p, s):
         mu, v = p
@@ -283,6 +282,8 @@ LAWS: dict[str, Law] = {law.slug: law for law in (
 
 MAX_N = 100_000
 MAX_DATA = 200_000
+MAX_VALUE = 1e75
+MAX_MOVE = 5.0        # montée de gradient : déplacement maximal par itération, dans l'espace sans contrainte
 
 
 # ---------------------------------------------------------------------------
@@ -321,6 +322,8 @@ def check_data(values) -> np.ndarray:
         raise LawError("Les données doivent être des nombres.") from None
     if x.size < 2 or not np.isfinite(x).all():
         raise LawError("Il faut au moins 2 valeurs numériques.")
+    if np.abs(x).max() > MAX_VALUE:                   # au-delà, les moments d'ordre 4 dépassent la capacité du calcul
+        raise LawError("Valeur trop grande : les données doivent rester inférieures à 1e75 en valeur absolue.")
     return x
 
 
@@ -332,9 +335,11 @@ def simulate(law: Law, params: list[float], n: int, seed: int | None) -> np.ndar
 def describe(x: np.ndarray) -> dict:
     """Statistiques descriptives, avec le diviseur n comme indiqué sur le site."""
     m = float(x.mean()); d = x - m
-    mu2 = float((d ** 2).mean()); mu3 = float((d ** 3).mean()); mu4 = float((d ** 4).mean())
+    mu2 = float((d ** 2).mean())
+    z = d / math.sqrt(mu2) if mu2 > 0 else None        # écarts réduits : pas de dépassement, quelle que soit l'unité
     return {"n": int(x.size), "min": float(x.min()), "max": float(x.max()), "mean": m, "var": mu2,
-            "skew": mu3 / mu2 ** 1.5 if mu2 > 0 else None, "kurt": mu4 / mu2 ** 2 - 3 if mu2 > 0 else None}
+            "skew": float((z ** 3).mean()) if z is not None else None,
+            "kurt": float((z ** 4).mean()) - 3 if z is not None else None}
 
 
 def gradient_ascent(law: Law, x: np.ndarray, max_iter: int = 3000, tol: float = 1e-16) -> dict:
@@ -379,13 +384,15 @@ def gradient_ascent(law: Law, x: np.ndarray, max_iter: int = 3000, tol: float = 
             sy = float(s_ @ y_)
             step = float(s_ @ s_) / sy if sy > 1e-300 else 1.0
             step = min(max(step, 1e-6), 1e4)
+        gnorm = math.sqrt(gn)
+        step = min(step, MAX_MOVE / gnorm)            # déplacement borné : le départ reste atteignable à toute échelle
         while True:                                   # garde-fou : condition d'Armijo
             zn = z + step * gz
             fn = f(zn)
-            if fn >= fz + 1e-4 * step * gn or step < 1e-12:
+            if fn >= fz + 1e-4 * step * gn or step * gnorm < 1e-12:
                 break
             step /= 2
-        if step < 1e-12:
+        if step * gnorm < 1e-12:
             converged = gn < 1e-6
             break
         z_prev, g_prev = z, gz
@@ -418,6 +425,9 @@ def clean(v):
 
 def analyse(law: Law, x: np.ndarray) -> dict:
     """Statistiques descriptives + les deux estimateurs."""
-    with np.errstate(all="ignore"):
-        mom = law.moments(x)
+    try:
+        with np.errstate(all="ignore"):
+            mom = law.moments(x)
+    except (ZeroDivisionError, OverflowError, ValueError):       # ex. valeurs identiques : variance nulle, formule sans valeur
+        mom = [float("nan")] * len(law.params)
     return clean({"stats": describe(x), "moments": mom, "gradient": gradient_ascent(law, x)})

@@ -60,7 +60,9 @@ def fr(v, d: int = 4) -> str:
         return "—"
     if isinstance(v, str):
         return v
-    if isinstance(v, (int, np.integer)):
+    if v != 0 and (abs(v) >= 1e15 or abs(v) < 1e-6):               # très grand ou très petit : notation scientifique
+        s = f"{float(v):.3e}"
+    elif isinstance(v, (int, np.integer)):
         s = f"{int(v):,}"
     elif d >= 4 and v != 0 and abs(v) < 5 * 10 ** -d:             # valeur très petite mais non nulle : 4 chiffres significatifs
         s = f"{float(v):.{3 - math.floor(math.log10(abs(v)))}f}".rstrip("0").rstrip(".")
@@ -122,7 +124,7 @@ def distribution(law: Law, x: np.ndarray, ref, est) -> dict:
                 cls = f"[{lo_}, {hi_}{']' if i == nb - 1 else ')'}"
             else:                                                    # notation française : [a ; b[ ; dernière classe [a ; b]
                 cls = f"[{lo_} ; {hi_}{']' if i == nb - 1 else '['}"
-            P["rows"].append([cls, round(float(centers[i]), dec + 1),
+            P["rows"].append([cls, round(float(centers[i]), dec + 1) if bw >= 1e-5 else float(f"{centers[i]:.4g}"),   # petites unités : chiffres significatifs
                               int(P["counts"][i]), P["dens"][i]]
                              + ([float(dr[i])] if dr is not None else []) + ([float(de[i])] if de is not None else []))
     P["beyond"] = P["below"] + P["above"]
@@ -174,7 +176,7 @@ def _build(law: Law, x: np.ndarray, kind: str, truth, seed, site: str) -> dict:
               ("Observations n", "Minimum", "Maximum", "Moyenne empirique", "Variance empirique", "Asymétrie", "Kurtosis"))
     stats_rows = list(zip(labels, (st["n"], lo, hi, st["mean"], st["var"], st["skew"], st["kurt"])))
 
-    gp = g.get("params") if g.get("applicable") else None
+    gp = g.get("params") if g.get("applicable") and g.get("converged") else None   # sans convergence : valeurs non retenues
     est_head = (["Parameter"] + (["True value"] if sim else []) + ["Closed-form estimator", "Gradient ascent"] if en else
                 ["Paramètre"] + (["Valeur vraie"] if sim else []) + ["Formule explicite", "Montée de gradient"])
     entier = law.slug in ("binomiale", "uniforme-discrete")          # n, a, b : des entiers, affichés sans décimales
@@ -186,16 +188,21 @@ def _build(law: Law, x: np.ndarray, kind: str, truth, seed, site: str) -> dict:
     if g.get("applicable"):
         it = g["iterations"]
         if en:
-            conv = f"converged in {it} iteration{'s' if it > 1 else ''}" if g["converged"] else f"stopped after {it} iterations"
-            grad_text = f"Gradient ascent: {conv}; final mean log-likelihood: {fr(g['loglik'])}."
+            grad_text = (f"Gradient ascent: converged in {it} iteration{'s' if it > 1 else ''}; final mean log-likelihood: {fr(g['loglik'])}."
+                         if g["converged"] else
+                         f"Gradient ascent: did not converge (stopped after {it} iteration{'s' if it > 1 else ''}); its values are unreliable and are not reported.")
         else:
-            conv = f"convergence en {it} itération{'s' if it > 1 else ''}" if g["converged"] else f"arrêt après {it} itérations"
-            grad_text = f"Montée de gradient : {conv} ; log-vraisemblance moyenne finale : {fr(g['loglik'])}."
+            grad_text = (f"Montée de gradient : convergence en {it} itération{'s' if it > 1 else ''} ; log-vraisemblance moyenne finale : {fr(g['loglik'])}."
+                         if g["converged"] else
+                         f"Montée de gradient : pas de convergence (arrêt après {it} itération{'s' if it > 1 else ''}) ; ses valeurs ne sont pas fiables et ne sont pas reportées.")
         if g.get("note"):
             grad_text += " " + tr(g["note"], lg)
     else:
         reason = tr(g["reason"], lg)
         grad_text = ("Gradient ascent: " if en else "Montée de gradient : ") + reason[0].lower() + reason[1:]
+    if not sim and ref is None:
+        grad_text = ("These data cannot be fitted with this distribution by the closed-form estimator (parameters outside the domain). " if en else
+                     "Ces données ne permettent pas d'ajuster cette loi par la formule explicite (paramètres hors domaine). ") + grad_text
 
     ref = ref if _valid(law, ref) else None
     est = mom if sim and _valid(law, mom) else None            # « Loi estimée » du site (formule explicite)
@@ -314,6 +321,8 @@ def to_xlsx(r: dict) -> bytes:
                     c.number_format = fmts[j] if not (isinstance(v, int) and fmts[j] == "0.0000") else "0"
                     if isinstance(v, float) and v != 0 and abs(v) < 5e-4 and fmts[j] == "0.0000":
                         c.number_format = "0.0000####"                  # très petit mais non nul : 0,00009384 et non 0,0000
+                    if isinstance(v, (int, float)) and v != 0 and (abs(v) < 1e-6 or abs(v) >= 1e15):
+                        c.number_format = "0.000E+00"                   # unités extrêmes : notation scientifique
                 c.alignment = Alignment(horizontal="right" if numeric[j] else "left")
         tables["n"] += 1
         last_col = chr(ord("B") + len(head) - 1)
@@ -391,7 +400,7 @@ def to_xlsx(r: dict) -> bytes:
         j += 1
     bar.y_axis.title = _t("Fréquence / probabilité" if disc else "Densité")
     bar.x_axis.title = _t("Valeur k" if disc else "x (centre de classe)")
-    bar.y_axis.number_format = "0.00"
+    bar.y_axis.number_format = "0.00" if 0.01 <= d["ymax"] < 1e6 else "0.0E+00"     # unités extrêmes : notation scientifique
     bar.x_axis.delete = bar.y_axis.delete = False
     n_cat = len(d["rows"])
     if n_cat > 12:                                                   # libellés de l'axe x lisibles : un sur plusieurs
@@ -440,7 +449,7 @@ def _ticks(a: float, b: float, nmax: int, steps=(1, 2, 2.5, 5, 10)) -> list[floa
     raw = (b - a) / nmax
     mag = 10 ** math.floor(math.log10(raw))
     st = next(m * mag for m in steps if m * mag >= raw * 0.999)
-    return [round(k * st, 10) + 0.0 for k in range(math.ceil(a / st - 1e-9), math.floor(b / st + 1e-9) + 1)]
+    return [float(f"{k * st:.12g}") + 0.0 for k in range(math.ceil(a / st - 1e-9), math.floor(b / st + 1e-9) + 1)]
 
 
 def _dec(t: list[float]) -> int:

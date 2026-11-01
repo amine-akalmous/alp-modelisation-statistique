@@ -43,6 +43,8 @@ _EN = {
     "Les données doivent être une liste de nombres.": "The data must be a list of numbers.",
     "Les données doivent être des nombres.": "The data must be numbers.",
     "Il faut au moins 2 valeurs numériques.": "At least 2 numerical values are required.",
+    "Valeur trop grande : les données doivent rester inférieures à 1e75 en valeur absolue.":
+        "Value too large: the data must stay below 1e75 in absolute value.",
     "Requête invalide.": "Invalid request.",
     "Fichier trop volumineux (4 Mo maximum).": "File too large (4 MB maximum).",
     "n doit être un entier compris entre 2 et 100 000.": "n must be an integer between 2 and 100,000.",

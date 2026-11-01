@@ -148,6 +148,60 @@ def test_api_estimate(client):
     assert j["stats"]["n"] == 5
 
 
+@pytest.mark.parametrize("slug", list(LAWS))
+@pytest.mark.parametrize("data", [[5.0] * 20, [0.0] * 20, [1.0] * 50 + [-1e12], [-1e6, 0.0, 1e6, 3.5], [1e-100, 2e-100, 3e-100], [1e70, 2e70]],
+                         ids=["const", "zeros", "aberrante", "melange", "minuscule", "enorme"])
+def test_donnees_extremes_sans_erreur_serveur(client, slug, data):
+    """Quelles que soient les données : un résultat ou un message clair, jamais une erreur serveur (exports compris)."""
+    assert client.post("/api/estimate", json={"law": slug, "data": data}).status_code == 200
+    body = {"law": slug, "kind": "data", "data": data}
+    assert client.post("/api/export", json={**body, "format": "xlsx"}).status_code == 200
+    assert client.post("/api/export", json={**body, "format": "pdf"}).status_code == 200
+
+
+def test_valeur_absurde_refusee_clairement(client):
+    r = client.post("/api/estimate", json={"law": "normale", "data": [1e300, 2e300]})
+    assert r.status_code == 400 and "trop grande" in r.get_json()["error"]
+
+
+@pytest.mark.parametrize("scale", [1e-30, 1e-9, 1e-6, 1e3, 1e9, 1e30])
+def test_gradient_independant_de_l_unite(scale):
+    """Changer d'unité ne doit pas faire décrocher la montée de gradient (normale : elle retrouve la formule)."""
+    x = np.random.default_rng(1).normal(5, 1, 1000) * scale
+    r = analyse(LAWS["normale"], x)
+    assert r["gradient"]["converged"]
+    assert r["gradient"]["params"] == pytest.approx(r["moments"], rel=1e-5)
+
+
+@pytest.mark.parametrize("outlier", [1e4, 1e6, 1e9, -1e6])
+def test_gradient_avec_valeur_aberrante(outlier):
+    x = np.append(np.random.default_rng(2).normal(10, 1, 200), outlier)
+    r = analyse(LAWS["normale"], x)
+    assert r["gradient"]["converged"]
+    assert r["gradient"]["params"] == pytest.approx(r["moments"], rel=1e-5)
+
+
+def test_export_petites_unites_lisibles():
+    """Données de l'ordre de 1e-15 : les centres de classe et les graduations ne s'écrasent pas à 0."""
+    from alp import export
+    x = np.random.default_rng(3).normal(5, 1, 500) * 1e-15
+    r = export.build_report(LAWS["normale"], x, "data", site="https://x", lang="fr")
+    assert all(row[1] > 0 for row in r["dist"]["rows"])
+    assert export.fr(5e-15) == "5,000e−15" and export.fr(0.5) == "0,5000"
+    assert len(set(export._ticks(0, 8e-15, 9))) > 3
+    assert export.to_pdf(r)[:4] == b"%PDF"
+
+
+def test_export_ne_reporte_pas_un_gradient_non_converge(monkeypatch):
+    """Sans convergence, le rapport le dit et ne donne pas les valeurs du gradient."""
+    from alp import export, laws
+    real = laws.gradient_ascent
+    monkeypatch.setattr(laws, "gradient_ascent", lambda law, x: {**real(law, x), "converged": False, "iterations": 1})
+    r = export.build_report(LAWS["normale"], np.array([1.0, 2.0, 4.0]), "data", site="https://x", lang="fr")
+    assert "pas de convergence (arrêt après 1 itération)" in r["grad_text"]
+    assert all(row[-1] is None for row in r["est"])
+
+
 def test_api_estimate_hors_support(client):
     j = client.post("/api/estimate", json={"law": "gamma", "data": [-1, 2, 3]}).get_json()
     assert j["gradient"]["applicable"] is False

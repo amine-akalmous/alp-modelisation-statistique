@@ -234,10 +234,10 @@ const CHOOSE=[
  ["Vous comptez des événements sur une durée ou une zone fixe.",["poisson"],"Compter des événements"],
  ["Vous attendez un premier succès, compté en nombre d'épreuves.",["geometrique"],"Attendre un succès"],
  ["Toutes les valeurs entières d'un intervalle sont équiprobables.",["uniforme-discrete"],"Entiers équiprobables"],
- ["Toutes les valeurs d'un intervalle réel sont équiprobables.",["uniforme-continue"],"Intervalle équiprobable"],
+ ["Toutes les valeurs d'un intervalle réel sont équiprobables.",["uniforme-continue"],"Valeurs équiprobables"],
  ["Vous observez des écarts symétriques autour d'une valeur centrale.",["normale"],"Écarts symétriques"],
  ["Vous mesurez une durée d'attente sans mémoire.",["exponentielle"],"Attente sans mémoire"],
- ["Vous étudiez des durées ou des grandeurs positives et asymétriques.",["gamma","weibull"],"Durées positives"],
+ ["Vous étudiez des durées ou des grandeurs positives et asymétriques.",["gamma","weibull"],"Durées et grandeurs positives"],
 ];
 const chooseRows=()=>CHOOSE.map(([q,ls])=>`<tr><td>${q}</td><td>${ls.map(s=>`<a class="lnk" href="${lawUrl(s)}">${LAWS[bySlug(s)].name}</a>`).join(tx(" ou "))}</td></tr>`).join("");
 
@@ -285,7 +285,15 @@ var I18N_EN={
  "Vos données":"Your data","Valeurs":"Values",
  "Tapez ou collez vos valeurs ici…&#10;une par ligne, ou séparées par des espaces ou des points-virgules":"Type or paste your values here…&#10;one per line, or separated by spaces or semicolons",
  "Ouvrir un fichier":"Open a file","Exemple":"Example","Lancer l'estimation":"Run the estimation",
- "Virgule ou point pour les décimales ; fichier .txt ou .csv, à ouvrir ou à déposer ici.":"Decimal point or comma; a .txt or .csv file, to open or drop here.",
+ "Virgule ou point pour les décimales ; fichier .txt, .csv ou .dat, à ouvrir ou à déposer ici.":"Decimal point or comma; a .txt, .csv or .dat file, to open or drop here.",
+ "Effacer":"Clear","toutes les valeurs, à la suite":"all the values, one after the other",
+ "Données reprises de la page précédente : elles restent dans cet onglet et ne sont envoyées qu'au clic sur le bouton.":"Data carried over from the previous page: they stay in this tab and are sent only when you click the button.",
+ "Plusieurs valeurs par ligne : elles sont lues à la suite, comme une seule liste.":"Several values per line: they are read one after the other, as a single list.",
+ "Aucune valeur numérique trouvée. Vérifiez le contenu, ou enregistrez votre fichier au format texte ou CSV.":"No numerical value found. Check the content, or save your file as text or CSV.",
+ "Ce fichier n'est pas un fichier texte (Excel, PDF…). Enregistrez-le au format CSV ou texte, ou copiez-collez la colonne de valeurs.":"This is not a text file (Excel, PDF…). Save it as CSV or text, or copy and paste the column of values.",
+ "La loi de Bernoulli n'accepte que les valeurs 0 et 1.":"The Bernoulli distribution only accepts the values 0 and 1.",
+ "La loi géométrique commence à 1 : toutes les valeurs doivent être supérieures ou égales à 1.":"The geometric distribution starts at 1: all values must be greater than or equal to 1.",
+ "Toutes les valeurs sont identiques : la dispersion est nulle, certains paramètres ne pourront pas être estimés.":"All the values are identical: the dispersion is zero, so some parameters cannot be estimated.",
  "Formats acceptés":"Accepted formats","Vos données et loi ajustée":"Your data and fitted distribution",
  "Estimation réussie":"Estimation complete","Échec de l'estimation":"Estimation failed",
  "Il faut au moins 2 valeurs.":"At least 2 values are required.",
@@ -300,7 +308,7 @@ var I18N_EN={
    "The results in the table above are obtained using the moment functions and the central moment functions defined by:",
  "et":"and",
  "Estimation des paramètres":"Parameter estimation","Paramètre":"Parameter","Formule explicite":"Closed-form estimator",
- "Vrai":"True","Gradient":"Gradient","Montée de gradient":"Gradient ascent","Départ":"Starting point",
+ "Vrai":"True","Valeur estimée":"Estimated value","Gradient":"Gradient","Montée de gradient":"Gradient ascent","Départ":"Starting point",
  "Log-vraisemblance moyenne finale":"Final mean log-likelihood",
  "Convergence de la log-vraisemblance au fil des itérations":"Convergence of the log-likelihood over the iterations",
  "itération":"iteration","(échelle log.)":"(log scale)",
@@ -339,8 +347,8 @@ if(LANG==="en"){
   ["Observations","Minimum","Maximum","Empirical mean","Empirical variance","Skewness","Kurtosis"].forEach((s,i)=>{STATS[i][0]=s});
   const CH=[["A trial has two outcomes: success or failure.","Two outcomes"],["You count successes over n independent trials.","Counting successes"],
     ["You count events over a fixed time span or area.","Counting events"],["You wait for a first success, counted in number of trials.","Waiting for a success"],
-    ["All integer values in an interval are equally likely.","Equally likely integers"],["All values in a real interval are equally likely.","Equally likely interval"],
+    ["All integer values in an interval are equally likely.","Equally likely integers"],["All values in a real interval are equally likely.","Equally likely values"],
     ["You observe symmetric deviations around a central value.","Symmetric deviations"],["You measure a memoryless waiting time.","Memoryless waiting"],
-    ["You study durations or positive, skewed quantities.","Positive durations"]];
+    ["You study durations or positive, skewed quantities.","Durations and positive quantities"]];
   CHOOSE.forEach((c,i)=>{c[0]=CH[i][0];c[2]=CH[i][1]});
 }

@@ -311,6 +311,12 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .sel{font-size:14px;padding:8px 12px;margin-top:10px}
 .err{display:none;margin:-2px 0 10px;font-size:13px;color:var(--err);background:#fff6f7;border:1px solid #f6cfd5;border-radius:10px;padding:8px 12px}
 .err.show{display:block}
+/* Notes sur ce qui a été interprété dans les données, et alertes sur les résultats */
+.parsed{margin:10px 0;padding:9px 12px;font-size:12.5px;line-height:1.5;color:var(--ink-2);background:var(--soft);border:1px solid var(--line-2);border-radius:10px}
+.parsed ul{list-style:disc;margin:0;padding-left:16px}
+.alert{margin:12px 0;font-size:14px;line-height:1.5;color:var(--err);background:#fff6f7;border:1px solid #f6cfd5;border-radius:12px;padding:10px 14px}
+.dsec>.alert{margin:0 0 14px}
+.def .v.nc,.conv .nc{color:var(--err)}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kpi{border-radius:14px;padding:11px 14px;background:var(--soft);min-width:0;border:1px solid var(--line-2)}
 .kpi small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em}
@@ -326,8 +332,9 @@ details.before li a{color:var(--a1-d);font-weight:500}
 .moments p{font-size:14.5px;color:var(--ink-2);line-height:1.6}
 .moments .mrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 56px;margin-top:16px;font-size:20px;color:var(--ink)}
 .moments .mrow .et{color:var(--muted);font-size:15px}   /* seulement le mot « et » : les formules gardent leur taille et leur couleur */.hint a{color:var(--a1-d);font-weight:500}
-.row{display:flex;gap:8px;margin-top:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .row .btn{flex:1}
+.row #pick{flex-basis:100%}
 .evalrow{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line-2);padding:9px 0 0;margin-top:10px;font-size:13.5px;color:var(--ink-2)}
 .evalrow strong{font-family:var(--mono);font-weight:500;font-size:16px;color:var(--a1-d)}
 .plotcard{padding:14px 16px 12px}

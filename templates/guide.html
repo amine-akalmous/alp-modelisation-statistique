@@ -74,34 +74,35 @@
       <section class="card gsec reveal" id="simulation">
         <span class="label">03 · Expérimenter</span>
         <h2>Connaître le modèle, observer un échantillon</h2>
-        <p>L'onglet Simulation tire des valeurs pseudo-aléatoires avec vos paramètres, puis les ré-estime à partir de l'échantillon. L'écart entre « vrai » et « estimé » change à chaque tirage et se resserre quand n augmente, en <span class="tx" data-t="1/\sqrt{n}"></span>. Voyez-le :</p>
+        <p>L'onglet Simulation tire des valeurs pseudo-aléatoires avec vos paramètres, puis ré-estime ces paramètres à partir de l'échantillon. L'écart entre « vrai » et « estimé » change à chaque tirage et se resserre quand n augmente, en <span class="tx" data-t="1/\sqrt{n}"></span>. Voyez-le :</p>
         <div class="demo">
           <div class="dh"><b>60 estimations de μ, chacune sur un échantillon de taille n</b><div class="ctl"><button class="btn sm ghost" data-n="10">n = 10</button><button class="btn sm ghost" data-n="100">n = 100</button><button class="btn sm ghost" data-n="1000">n = 1000</button></div></div>
           <canvas id="demoSpread"></canvas>
           <div class="ctl" style="margin-top:6px">Dispersion des estimations : <span class="res" id="dS"></span><span class="muted" id="dS2"></span></div>
         </div>
         <p>Le champ <strong>graine</strong> rend un tirage reproductible : même graine et mêmes paramètres donnent le même échantillon, pratique pour préparer un exemple de cours.</p>
-        <div class="callout"><b>Plus de tirages n'est pas plus de mesures.</b><p>Générer 10 000 valeurs à partir d'une loi ajustée sur 20 observations ne crée aucune information expérimentale. L'incertitude sur les paramètres estimés n'est pas reportée dans la simulation.</p></div>
+        <div class="callout"><b>Multiplier les tirages ne remplace pas de nouvelles mesures.</b><p>Générer 10 000 valeurs à partir d'une loi ajustée sur 20 observations ne crée aucune information expérimentale. L'incertitude sur les paramètres estimés n'est pas reportée dans la simulation.</p></div>
       </section>
 
       <section class="card gsec reveal" id="donnees">
-        <span class="label">04 · Garder le sens du fichier</span>
+        <span class="label">04 · Préparer son fichier</span>
         <h2>Une colonne, une variable</h2>
-        <p>Dans l'onglet Application, tapez ou collez vos valeurs, ou ouvrez un fichier <strong>.txt</strong> ou <strong>.csv</strong>. Une liste peut être séparée par des retours à la ligne, des espaces ou des points-virgules ; virgule et point sont acceptés pour les décimales.</p>
-        <p>Pour un <strong>tableau</strong> (colonnes séparées par des points-virgules ou des tabulations), un menu permet de choisir la colonne à analyser ; la ligne de titres est reconnue automatiquement.</p>
+        <p>Dans l'onglet Application, tapez ou collez vos valeurs, ou ouvrez un fichier <strong>.txt</strong>, <strong>.csv</strong> ou <strong>.dat</strong>. Une liste peut être séparée par des retours à la ligne, des espaces ou des points-virgules ; virgule et point sont acceptés pour les décimales.</p>
+        <p>Pour un <strong>tableau</strong> (colonnes séparées par des points-virgules, des tabulations ou des espaces), un menu permet de choisir la colonne à analyser ; les lignes d'en-tête et la ligne de titres sont reconnues automatiquement.</p>
         <div class="code">temps;ecart_Pa
 0;0,12
 1;0,15
 2;0,11</div>
-        <p>Ici, choisissez « ecart_Pa ». Pour un CSV séparé par des virgules, écrivez les décimales avec un point. Les cellules non numériques sont ignorées et leur nombre est signalé : rien n'est supprimé en silence.</p>
-        <p class="small">Vos valeurs sont envoyées au serveur uniquement pour faire le calcul ; elles ne sont ni enregistrées ni conservées.</p>
+        <p>Ici, le site propose « ecart_Pa », car « temps » ressemble à un index ; vous pouvez changer de colonne dans le menu. Pour un CSV séparé par des virgules, écrivez les décimales avec un point. Un fichier Excel (.xlsx) doit d'abord être enregistré au format CSV.</p>
+        <p>Sous la zone de saisie, une <strong>note</strong> signale ce qui a été interprété ou écarté : l'unité retirée, les lignes ou cellules ignorées, la colonne proposée. Lisez-la avant de lancer l'estimation.</p>
+        <p class="small">Quand vous changez de loi, vos valeurs vous suivent : elles restent dans cet onglet du navigateur jusqu'à sa fermeture. Elles sont envoyées au serveur uniquement au clic sur « Lancer l'estimation », pour faire le calcul ; elles n'y sont ni enregistrées ni conservées.</p>
       </section>
 
       <section class="card gsec reveal" id="interpreter">
         <span class="label">05 · Interpréter</span>
         <h2>Un ajustement est un point de départ</h2>
         <div class="keys">
-          <div><b>Dans la famille choisie</b><span>Les paramètres estimés sont les meilleurs pour cette loi ; ils ne prouvent pas que c'est la bonne loi.</span></div>
+          <div><b>Dans la famille choisie</b><span>Les paramètres estimés ajustent cette loi à vos données ; ils ne prouvent pas que c'est la bonne loi.</span></div>
           <div><b>Regarder avant de conclure</b><span>Comparez l'histogramme et la courbe, essayez une autre loi, regardez l'asymétrie et le kurtosis.</span></div>
           <div><b>Indépendance</b><span>Les méthodes supposent des observations indépendantes et de même loi.</span></div>
         </div>

@@ -40,7 +40,7 @@ _DOMAIN = {   # domaine mathématique de chaque loi (les bornes des champs de sa
 def valid(law: Law, p) -> bool:
     """Paramètres utilisables pour tracer la loi : finis et dans le domaine mathématique de la loi."""
     return (p is not None and len(p) == len(law.params) and all(v is not None and math.isfinite(v) for v in p)
-            and _DOMAIN[law.slug](p))
+            and _DOMAIN[law.slug](p) and (not law.discrete or all(abs(v) <= 2 ** 53 for v in p)))
 
 
 def for_sample(law: Law, x: np.ndarray, kind: str, truth=None, moments=None) -> dict:
@@ -106,7 +106,7 @@ def plot_data(law: Law, x: np.ndarray, ref=None, est=None) -> dict:
     f_est = law.frozen(est) if est is not None else None
 
     if law.discrete:
-        xi = np.rint(x).astype(np.int64)
+        xi = np.clip(np.rint(x), -2.0 ** 53, 2.0 ** 53).astype(np.int64)
         lo, hi = int(xi.min()), int(xi.max())
         if hi - lo > 2000:                                       # valeurs aberrantes : partie centrale des données
             lo, hi = (int(v) for v in np.rint(np.quantile(xi, [0.01, 0.99])))
@@ -124,6 +124,9 @@ def plot_data(law: Law, x: np.ndarray, ref=None, est=None) -> dict:
             lo, hi = int(xi.min()), int(xi.max())
             if hi - lo > 5000:
                 lo, hi = (int(v) for v in np.rint(np.quantile(xi, [0.01, 0.99])))
+        if hi - lo > 5000:                                       # valeur isolée sur un petit échantillon : autour de la médiane
+            mid = int(np.median(xi))
+            lo, hi = mid - 2500, mid + 2500
         ks = np.arange(lo, hi + 1)
         keep = (xi >= lo) & (xi <= hi)
         counts = np.bincount(xi[keep] - lo, minlength=ks.size)[:ks.size]

@@ -67,40 +67,41 @@
           <canvas id="demoArea"></canvas>
           <div class="ctl" style="justify-content:space-between;margin-top:6px"><span><span class="tx" data-t="P(a\le X\le b)"></span> = <span class="res" id="dP"></span></span><span>maximum height of the density = <span class="res" id="dM"></span></span></div>
         </div>
-        <p>The <strong>cumulative distribution function</strong> <span class="tx" data-t="F(x)=P(X\le x)"></span> increases from 0 to 1. The 95 % <strong>quantile</strong> is the value below which at least 95 % of the probability lies.</p>
+        <p>The <strong>cumulative distribution function</strong> <span class="tx" data-t="F(x)=P(X\le x)"></span> increases from 0 to 1. The 95% <strong>quantile</strong> is the value below which at least 95% of the probability lies.</p>
       </section>
 
       <section class="card gsec reveal" id="simulation">
         <span class="label">03 · Experiment</span>
         <h2>Know the model, observe a sample</h2>
-        <p>The Simulation tab draws pseudo-random values with your parameters, then re-estimates them from the sample. The gap between “true” and “estimated” changes with every draw and narrows as n increases, at the rate <span class="tx" data-t="1/\sqrt{n}"></span>. See for yourself:</p>
+        <p>The Simulation tab draws pseudo-random values with your parameters, then re-estimates these parameters from the sample. The gap between “true” and “estimated” changes with every draw and narrows as n increases, at the rate <span class="tx" data-t="1/\sqrt{n}"></span>. See for yourself:</p>
         <div class="demo">
           <div class="dh"><b>60 estimates of μ, each from a sample of size n</b><div class="ctl"><button class="btn sm ghost" data-n="10">n = 10</button><button class="btn sm ghost" data-n="100">n = 100</button><button class="btn sm ghost" data-n="1000">n = 1000</button></div></div>
           <canvas id="demoSpread"></canvas>
           <div class="ctl" style="margin-top:6px">Spread of the estimates: <span class="res" id="dS"></span><span class="muted" id="dS2"></span></div>
         </div>
         <p>The <strong>seed</strong> field makes a draw reproducible: the same seed with the same parameters gives the same sample, which is handy when preparing a teaching example.</p>
-        <div class="callout"><b>More draws are not more measurements.</b><p>Generating 10,000 values from a distribution fitted on 20 observations creates no experimental information. The uncertainty on the estimated parameters is not carried over into the simulation.</p></div>
+        <div class="callout"><b>More draws cannot replace new measurements.</b><p>Generating 10,000 values from a distribution fitted on 20 observations creates no experimental information. The uncertainty on the estimated parameters is not carried over into the simulation.</p></div>
       </section>
 
       <section class="card gsec reveal" id="donnees">
-        <span class="label">04 · Keep the file meaningful</span>
+        <span class="label">04 · Prepare your file</span>
         <h2>One column, one variable</h2>
-        <p>In the Application tab, type or paste your values, or open a <strong>.txt</strong> or <strong>.csv</strong> file. A list can be separated by line breaks, spaces or semicolons; both the decimal point and the decimal comma are accepted.</p>
-        <p>For a <strong>table</strong> (columns separated by semicolons or tabs), a menu lets you choose the column to analyze; the header row is detected automatically.</p>
+        <p>In the Application tab, type or paste your values, or open a <strong>.txt</strong>, <strong>.csv</strong> or <strong>.dat</strong> file. A list can be separated by line breaks, spaces or semicolons; both the decimal point and the decimal comma are accepted.</p>
+        <p>For a <strong>table</strong> (columns separated by semicolons, tabs or spaces), a menu lets you choose the column to analyze; preamble lines and the header row are detected automatically.</p>
         <div class="code">time;deviation_Pa
 0;0.12
 1;0.15
 2;0.11</div>
-        <p>Here, choose “deviation_Pa”. In a comma-separated CSV, write decimals with a point. Non-numeric cells are ignored and their number is reported: nothing is removed silently.</p>
-        <p class="small">Your values are sent to the server only to perform the calculation; they are neither recorded nor stored.</p>
+        <p>Here, the site suggests “deviation_Pa”, because “time” looks like an index; you can change the column in the menu. In a comma-separated CSV, write decimals with a point. An Excel file (.xlsx) must first be saved as CSV.</p>
+        <p>Below the input area, a <strong>note</strong> reports what was interpreted or set aside: the unit removed, any lines or cells ignored, the column suggested. Read it before running the estimation.</p>
+        <p class="small">When you change distribution, your values follow you: they stay in this browser tab until it is closed. They are sent to the server only when you click “Run the estimation”, to perform the calculation; they are neither recorded nor stored there.</p>
       </section>
 
       <section class="card gsec reveal" id="interpreter">
         <span class="label">05 · Interpret</span>
         <h2>A fit is a starting point</h2>
         <div class="keys">
-          <div><b>Within the chosen family</b><span>The estimated parameters are the best ones for this distribution; they do not prove that it is the right distribution.</span></div>
+          <div><b>Within the chosen family</b><span>The estimated parameters fit this distribution to your data; they do not prove that it is the right distribution.</span></div>
           <div><b>Look before concluding</b><span>Compare the histogram with the curve, try another distribution, look at the skewness and the kurtosis.</span></div>
           <div><b>Independence</b><span>The methods assume independent and identically distributed observations.</span></div>
         </div>
