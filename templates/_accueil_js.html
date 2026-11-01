@@ -44,7 +44,7 @@ $("#filters").addEventListener("click",e=>{
   const ORDER=[];for(let i=0;i<Math.max(dI.length,cI.length);i++){if(i<dI.length)ORDER.push(dI[i]);if(i<cI.length)ORDER.push(cI[i])}
   $("#vDots").innerHTML=ORDER.map(()=>"<i></i>").join("");
   let W=0,H=0,pos=Math.max(0,ORDER.indexOf(7)),cur=ORDER[pos],prev=cur,t0=0;
-  const HOLD=550,MORPH=420,ease=k=>k<.5?4*k*k*k:1-(-2*k+2)**3/2,Lm=18,Rm=18,Tm=16,Bm=30;
+  const HOLD=880,MORPH=620,ease=k=>k<.5?4*k*k*k:1-(-2*k+2)**3/2,Lm=18,Rm=18,Tm=16,Bm=30;
   function size(){const r=c.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)}
   function label(){const L=LAWS[cur],p=L.P.map(q=>q.v);$("#vName").textContent=L.name;$("#vNt").textContent=NT[cur];
     $("#vE").textContent=fmt(L.m(p),3);$("#vV").textContent=fmt(L.v(p),3);$("#vT").textContent=tx(L.disc?"discrète":"continue");

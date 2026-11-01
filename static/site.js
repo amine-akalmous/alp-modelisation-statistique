@@ -4,7 +4,7 @@
      Cycle complet de 2 minutes ; l'horloge est partagée entre les pages de la visite. */
   const root=document.documentElement,PERIOD=120000;
   let start=Date.now();try{const s=+sessionStorage.getItem("alp-t0");if(s)start=s;else sessionStorage.setItem("alp-t0",start)}catch(e){}
-  /* Mélange dans l'espace OKLab : le passage bleu → orange reste naturel, sans détour par le rose */
+  /* Mélange direct des deux couleurs, dans l'espace OKLab */
   const lin=c=>(c/=255)<=.04045?c/12.92:((c+.055)/1.055)**2.4,gam=c=>Math.round(255*Math.min(1,Math.max(0,c<=.0031308?12.92*c:1.055*c**(1/2.4)-.055)));
   function toLab([r,g,b]){[r,g,b]=[r,g,b].map(lin);
     const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
