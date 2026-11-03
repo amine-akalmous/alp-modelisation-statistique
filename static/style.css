@@ -154,7 +154,7 @@ nav.main a.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(10,15,3
 .viz .vf small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 .viz .vf strong{font-family:var(--mono);font-size:18px;font-weight:500}
 
-section.blk{padding:96px 0 0}
+section.blk{padding-top:96px;padding-bottom:0}
 .bhead{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:30px;flex-wrap:wrap}
 .bhead h2{margin-top:12px}
 .bhead p{color:var(--muted);max-width:46ch}
